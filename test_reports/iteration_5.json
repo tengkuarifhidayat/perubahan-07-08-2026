@@ -1,0 +1,19 @@
+{
+  "summary": "Backend-only verification of Layer-2 auto-reject feature on approve. All 5 scenarios (A, B, C, D, E) passed. Smart Indonesian rejection messages with alternative slot suggestions are generated correctly; non-overlapping pending bookings are left untouched; manual reject and race-condition guard still work.",
+  "tested_scope": ["backend", "integration"],
+  "passed": [
+    "SCENARIO A: Approving X (Labor 1, 2027-03-09, 09:00-11:00) auto-rejected overlapping Y with reason containing 'Labor 1 jam 09:00–11:00', '9 Maret 2027', 'sudah disetujui', plus 'Labor 1 jam 11:00 ke atas' AND 'Labor 2 jam 09:00–11:00' alternatives.",
+    "SCENARIO B: Approving B1 auto-rejected both B2 and B3 (each got its own smart rejection_reason with alternatives).",
+    "SCENARIO C: With Labor 2 blocked at same time and Labor 1 blocked from 11:00-16:00, auto-reject message correctly says 'Tidak ada slot kosong lain di hari yang sama, silakan pilih tanggal lain.'",
+    "SCENARIO D: Non-overlapping pending booking (14:00-15:00) remained 'menunggu' after 09:00-11:00 was approved.",
+    "SCENARIO E: Manual POST /api/bookings/{id}/reject still updates rejection_reason='manual test' and status='ditolak'. Attempting to create a booking overlapping an already-approved one returns 409 (layer-1 guard). The approve-time race guard (line 768) still exists in code."
+  ],
+  "failed": [],
+  "action_items": [
+    "Minor observation (not a blocker): the 'auto_rejected: true' flag is set at the DB level but is not exposed by sanitize_booking(), so it does not appear in GET /api/bookings/check responses. If frontend needs to differentiate auto-rejected from manually-rejected records, add 'auto_rejected' to sanitize_booking()."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "n/a (skipped as requested)"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "NIM regex is ^\\d{7,15}$ (pure digits) — testing used numeric NIMs like 301100001. Rate limit avoided using unique X-Forwarded-For per create. En-dash '–' correctly used in time ranges. Indonesian date format '{D} {Bulan} {YYYY}' verified."
+}

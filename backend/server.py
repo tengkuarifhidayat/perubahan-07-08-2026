@@ -583,6 +583,77 @@ def suggest_free_slots(conflicts: List[dict], s: dict, date_str: str) -> List[Di
     def fmt(m): return f"{m//60:02d}:{m%60:02d}"
     return [{"start": fmt(a), "end": fmt(b)} for a, b in free if b - a >= 30][:3]
 
+
+def _fmt_date_id(date_str: str) -> str:
+    """Format YYYY-MM-DD -> '2 Juli 2026' (Indonesian)."""
+    bulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+             "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    return f"{d.day} {bulan[d.month]} {d.year}"
+
+
+async def build_layer2_rejection_message(rejected: dict, approved: dict) -> str:
+    """Build an Indonesian rejection message with alternative slot suggestions
+    for a booking auto-rejected because another overlapping booking was approved."""
+    s = await get_settings()
+    date_str = approved["date"]
+    d = datetime.strptime(date_str, "%Y-%m-%d").date()
+    wd = str(d.weekday())
+    oh = s["operating_hours"].get(wd, {})
+    date_id = _fmt_date_id(date_str)
+
+    base = (f"Pengajuan Anda ditolak karena {approved['room_name']} jam "
+            f"{approved['start_time']}–{approved['end_time']} pada {date_id} "
+            f"sudah disetujui untuk pemesan lain.")
+
+    if not oh.get("open"):
+        return base + " Tidak ada slot kosong lain di hari yang sama, silakan pilih tanggal lain."
+
+    open_m = time_to_min(oh["start"])
+    close_m = time_to_min(oh["end"])
+
+    alternatives: List[str] = []
+
+    # 1. Same room — earliest free slot AFTER the approved end (within operating hours)
+    same_room_busy = await db.bookings.find({
+        "room_id": approved["room_id"], "date": date_str,
+        "status": {"$in": [STATUS_MENUNGGU, STATUS_DISETUJUI]},
+        "_id": {"$ne": rejected["_id"]},
+    }).to_list(200)
+    approved_end_m = time_to_min(approved["end_time"])
+    # find earliest free start >= approved_end within operating hours (same room)
+    if approved_end_m < close_m:
+        busy_intervals = sorted([(time_to_min(x["start_time"]), time_to_min(x["end_time"])) for x in same_room_busy])
+        cur = max(approved_end_m, open_m)
+        free_start = None
+        for st, en in busy_intervals:
+            if en <= cur: continue
+            if st > cur:
+                free_start = cur
+                break
+            cur = max(cur, en)
+        if free_start is None and cur < close_m:
+            free_start = cur
+        if free_start is not None and free_start < close_m:
+            alternatives.append(f"{approved['room_name']} jam {free_start//60:02d}:{free_start%60:02d} ke atas")
+
+    # 2. Other rooms — same time slot still free on that date?
+    rooms = await db.rooms.find({"active": True}).to_list(20)
+    for r in rooms:
+        if r["_id"] == approved["room_id"]:
+            continue
+        other_conflicts = await find_conflicts(
+            r["_id"], date_str, approved["start_time"], approved["end_time"],
+            [STATUS_MENUNGGU, STATUS_DISETUJUI],
+        )
+        if not other_conflicts:
+            alternatives.append(f"{r['name']} jam {approved['start_time']}–{approved['end_time']}")
+
+    if not alternatives:
+        return base + " Tidak ada slot kosong lain di hari yang sama, silakan pilih tanggal lain."
+
+    return base + " Slot yang masih tersedia di hari yang sama: " + ", atau ".join(alternatives) + "."
+
 @api.get("/bookings/check")
 async def check_status(code: Optional[str] = None, nim: Optional[str] = None):
     if code:
@@ -704,6 +775,25 @@ async def approve_booking(booking_id: str, user: dict = Depends(require_role("ke
     updated = await db.bookings.find_one({"_id": booking_id})
     await broadcast_event({"type": "booking_updated", "booking": sanitize_booking(updated)})
     await notify_role("tata_usaha", f"Pengajuan {b['code']} disetujui", "booking_approved", booking_id)
+
+    # Auto-reject any other MENUNGGU bookings that overlap the same room+date,
+    # with a smart Indonesian message including alternative slot suggestions.
+    overlapping = await find_conflicts(
+        updated["room_id"], updated["date"], updated["start_time"], updated["end_time"],
+        [STATUS_MENUNGGU], exclude_id=updated["_id"],
+    )
+    for ov in overlapping:
+        msg = await build_layer2_rejection_message(ov, updated)
+        await db.bookings.update_one({"_id": ov["_id"]}, {"$set": {
+            "status": STATUS_DITOLAK,
+            "approved_by": user["email"],
+            "approved_at": now_utc(),
+            "rejection_reason": msg,
+            "auto_rejected": True,
+        }})
+        rejected_doc = await db.bookings.find_one({"_id": ov["_id"]})
+        await broadcast_event({"type": "booking_updated", "booking": sanitize_booking(rejected_doc)})
+
     return sanitize_booking(updated)
 
 @api.post("/bookings/{booking_id}/reject")
