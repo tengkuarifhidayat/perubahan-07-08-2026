@@ -13,6 +13,10 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import Laporan from "@/pages/Laporan";
 import KioskTV from "@/pages/KioskTV";
 
+const ROLES_KEPALA_LABOR = ["kepala_labor", "admin"];
+const ROLES_TU = ["tata_usaha", "admin"];
+const ROLES_ADMIN = ["admin"];
+
 function Protected({ roles, children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-zinc-500">Memuat…</div>;
@@ -34,13 +38,13 @@ export default function App() {
           <Route path="/kiosk/tv" element={<KioskTV />} />
 
           <Route path="/dasbor/kepala-labor" element={
-            <Protected roles={["kepala_labor", "admin"]}><KepalaLaborDashboard /></Protected>} />
+            <Protected roles={ROLES_KEPALA_LABOR}><KepalaLaborDashboard /></Protected>} />
           <Route path="/dasbor/tu" element={
-            <Protected roles={["tata_usaha", "admin"]}><TataUsahaDashboard /></Protected>} />
+            <Protected roles={ROLES_TU}><TataUsahaDashboard /></Protected>} />
           <Route path="/dasbor/admin" element={
-            <Protected roles={["admin"]}><AdminDashboard /></Protected>} />
+            <Protected roles={ROLES_ADMIN}><AdminDashboard /></Protected>} />
           <Route path="/laporan" element={
-            <Protected roles={["tata_usaha", "admin"]}><Laporan /></Protected>} />
+            <Protected roles={ROLES_TU}><Laporan /></Protected>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

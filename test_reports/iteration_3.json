@@ -1,0 +1,28 @@
+{
+  "summary": "Third regression pass after 3 code-quality patches (role-array constants in App.js, useMemo AuthProvider value in auth.jsx, WEEKDAYS key idx->label in AdminDashboard.jsx). All targeted regressions PASS. Backend: POST /api/auth/login admin -> 200 + cookie; GET /api/auth/me -> admin; GET /api/rooms + /api/settings/public 200; POST /api/bookings/public created LAB-2026-0010. Frontend: /masuk admin login redirects to /dasbor/admin (proves ProtectedRoute + ROLES_* constant refactor OK). Admin can navigate to /dasbor/kepala-labor and /dasbor/tu (proves ROLES_KEPALA_LABOR/ROLES_TU arrays include admin correctly). Admin > Jam & Libur tab renders 7 weekday rows (Senin..Minggu) each with Buka checkbox + start/end time inputs (proves WEEKDAYS.map key=label works). Toggling day-open-0 checkbox saved with 'Tersimpan' toast; state persisted to backend (verified via GET /api/settings/public showing updated open flag), then restored. Logout button clicked -> redirected to /masuk and /dasbor/admin now bounces to /masuk (proves useMemo-wrapped AuthProvider value did not break login/logout flow). /cek-status search-by-code returns booking info (LAB- present in DOM). No console errors observed.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login admin@fh.unri.ac.id/admin123 -> 200 with access_token + cookie",
+    "GET /api/auth/me -> 200, role=admin",
+    "GET /api/rooms + GET /api/settings/public -> 200",
+    "POST /api/bookings/public -> 200, created LAB-2026-0010",
+    "Landing / loads and shows 'Ajukan Pemesanan' CTA linking to /pesan",
+    "/masuk staff login (admin creds) redirects to /dasbor/admin (ProtectedRoute + role-array constants OK)",
+    "/dasbor/kepala-labor accessible by admin (ROLES_KEPALA_LABOR constant includes admin)",
+    "/dasbor/tu accessible by admin (ROLES_TU constant includes admin)",
+    "Admin > Jam & Libur tab renders 7 weekday rows (Senin..Minggu) each with Buka checkbox + time inputs (WEEKDAYS key change safe)",
+    "Toggling day-open-0 checkbox triggers save with 'Tersimpan' toast; backend /api/settings/public reflects change",
+    "/cek-status search by code (LAB-2026-0001) returns booking data in DOM",
+    "Logout button clicked -> user redirected to /masuk, protected /dasbor/admin bounces to /masuk (useMemo AuthProvider safe)",
+    "No React key warnings or console errors observed"
+  ],
+  "failed": [],
+  "notes": [
+    "Frontend /pesan booking submit through UI was rejected during this run by device rate-limiter (per iteration_2 note; same test device previously submitted LAB-2026-0001..0009). Backend booking flow re-verified directly via POST /api/bookings/public which produced LAB-2026-0010 successfully, confirming end-to-end booking is not regressed.",
+    "Schedule state modified during test (day-open-0 toggled) was restored to True at end of test."
+  ],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

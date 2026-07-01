@@ -205,7 +205,7 @@ function ScheduleTab() {
           {WEEKDAYS.map((label, idx) => {
             const d = s.operating_hours[String(idx)];
             return (
-              <div key={idx} className="grid grid-cols-12 items-center gap-2 text-sm">
+              <div key={label} className="grid grid-cols-12 items-center gap-2 text-sm">
                 <div className="col-span-3">{label}</div>
                 <label className="col-span-2 flex items-center gap-1 text-xs">
                   <input type="checkbox" checked={d.open} onChange={(e) => setDay(idx, { open: e.target.checked })} data-testid={`day-open-${idx}`} /> Buka
