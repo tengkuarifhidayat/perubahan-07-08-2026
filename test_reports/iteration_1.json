@@ -1,0 +1,40 @@
+{
+  "summary": "First-finish smoke test for FH UNRI Lab Booking. Backend + frontend both broadly working. All critical flows verified: auth, rooms, public settings, booking creation with CAPTCHA/NIM/operating hours validation, overlap detection (inside/partial/wrap/exact non-overlap), status check, PATCH restriction after approval, cancel, approve, reject, race-condition approve guard (409), reschedule (with room_id required), user CRUD, kiosk token regen+verify, Excel+PDF exports, WebSocket connect, mahasiswa cache. Frontend booking form (/pesan) submitted successfully producing LAB-2026-0006; /cek-status shows booking with cancel button; /masuk admin login redirects to /dasbor/admin; Admin Kiosk tab regenerates token and shows URL; /kiosk/tv?token=<valid> loads dark monthly calendar with LIVE indicator.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login admin -> 200 + JWT; GET /api/auth/me -> admin",
+    "GET /api/rooms -> Labor 1 & Labor 2",
+    "GET /api/settings/public -> operating_hours, holidays, nim_regex",
+    "POST /api/bookings/public creates LAB-YYYY-XXXX (LAB-2026-0001 seq)",
+    "Validation: invalid CAPTCHA 400, invalid NIM 400, start>=end 400, outside op-hours 400",
+    "Overlap 409 with conflicts+suggestions for inside (09-10) and partial (10-12) overlap",
+    "Non-overlap (11-12 vs 08-11) accepted",
+    "GET /api/bookings/check?code and ?nim return booking",
+    "PATCH /api/bookings/public/{code} on approved -> 400 (correct)",
+    "POST /api/bookings/public/{code}/cancel -> 200 for menunggu",
+    "POST /api/bookings/{id}/approve -> 200; second overlap approve -> 409 (race guard OK)",
+    "POST /api/bookings/{id}/reject with reason -> 200",
+    "POST /api/bookings/{id}/reschedule (with room_id) -> 200, reschedule_logs appended",
+    "POST /api/users (kepala_labor) + GET /api/users -> 200",
+    "POST /api/settings/kiosk-token/regenerate returns kiosk_token; GET /api/kiosk/verify ok/401",
+    "GET /api/reports/export.xlsx (5117 bytes) & export.pdf (2196 bytes) as admin",
+    "WebSocket /api/ws connects",
+    "GET /api/mahasiswa/{nim} returns cached student",
+    "Rate limiting effective (429 hit during test volume)",
+    "Frontend: landing -> /pesan -> submit with CAPTCHA -> success LAB-2026-0006",
+    "Frontend: /cek-status search by code shows booking + Cancel button",
+    "Frontend: /masuk admin/admin123 -> /dasbor/admin",
+    "Frontend: Admin Kiosk tab regenerates token & shows kiosk URL",
+    "Frontend: /kiosk/tv?token=valid shows dark monthly calendar with LIVE indicator"
+  ],
+  "failed": [],
+  "notes": [
+    "Kiosk regen response field is `kiosk_token` (not `token`) — frontend already uses correct field.",
+    "Reschedule endpoint requires `room_id` in body (in addition to date/start/end/reason); worked when included.",
+    "WebSocket booking_created event not directly captured due to rate-limit blocking secondary create attempts during WS test; connection itself verified."
+  ],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
