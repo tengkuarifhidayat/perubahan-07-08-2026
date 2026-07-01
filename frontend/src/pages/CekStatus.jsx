@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
 import { toast } from "sonner";
 import StatusPill, { RoomChip } from "@/components/StatusPill";
-import { Search, ArrowLeft, X, Pencil, ShieldAlert } from "lucide-react";
+import { Search, ArrowLeft, X, Pencil, ShieldAlert, RefreshCw } from "lucide-react";
 
 export default function CekStatus() {
   const [params] = useSearchParams();
@@ -92,6 +92,32 @@ export default function CekStatus() {
                         </span>
                       )}
                       <div className="text-sm text-red-800 mt-1 leading-relaxed">{b.rejection_reason}</div>
+                      {b.auto_rejected && b.alternatives && b.alternatives.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-red-200">
+                          <div className="label-eyebrow text-red-700 mb-2">AJUKAN ULANG DENGAN SLOT ALTERNATIF</div>
+                          <div className="flex flex-wrap gap-2">
+                            {b.alternatives.map((alt, i) => {
+                              const params = new URLSearchParams({
+                                nim: b.nim, nama: b.nama, kelas: b.kelas,
+                                room_id: alt.room_id, date: alt.date,
+                                start_time: alt.start_time, end_time: alt.end_time,
+                                purpose: b.purpose || "",
+                                participants: String(b.participants || 1),
+                              });
+                              return (
+                                <Link
+                                  key={`${alt.room_id}-${alt.start_time}-${i}`}
+                                  to={`/pesan?${params.toString()}`}
+                                  data-testid={`reapply-${b.code}-${i}`}
+                                  className="inline-flex items-center gap-1.5 text-xs px-3 py-2 bg-white border border-red-300 rounded-sm hover:bg-red-100 text-red-900 font-medium">
+                                  <RefreshCw className="w-3.5 h-3.5" />
+                                  {alt.room_name} · {alt.start_time}–{alt.end_time}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

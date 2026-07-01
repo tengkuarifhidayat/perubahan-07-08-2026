@@ -1,0 +1,22 @@
+{
+  "summary": "Verified new structured `alternatives` array on auto-rejected bookings + one-click Reapply UX end-to-end. Backend returns correct alternatives (same_room_later + other_room_same_time) with auto_rejected=true and preserves Indonesian rejection_reason text. Manually rejected bookings still return alternatives=[] and auto_rejected=false. Frontend /cek-status renders 'AJUKAN ULANG DENGAN SLOT ALTERNATIF' pills with correct data-testids; clicking navigates to /pesan with all expected URL params; the prefilled-banner appears and every form field (nim/nama/kelas/room/date/start/end/purpose) is pre-populated. Direct /pesan without query params correctly hides the banner and uses defaults (start=08:00, end=10:00, empty NIM/Nama/Kelas).",
+  "tested_scope": ["backend", "frontend", "integration"],
+  "passed": [
+    "POST /api/bookings/public creates two overlapping menunggu bookings (LAB-2026-0044 + LAB-2026-0045) using unique X-Forwarded-For",
+    "POST /api/bookings/{id}/approve on first booking triggers layer-2 auto-reject on the second",
+    "GET /api/bookings/check?code=LAB-2026-0045 returns status=ditolak, auto_rejected=true, alternatives has 2 entries: {labor-1 11:00-12:00 same_room_later} and {labor-2 09:00-11:00 other_room_same_time}",
+    "rejection_reason still contains Indonesian slot suggestions ('Labor 1 jam 11:00 ke atas, atau Labor 2 jam 09:00-11:00')",
+    "Manually rejected booking (LAB-2026-0046 via POST /reject) returns alternatives=[] and auto_rejected=false",
+    "/cek-status?code=LAB-2026-0045 renders Auto-rejected badge + 'AJUKAN ULANG DENGAN SLOT ALTERNATIF' section",
+    "Reapply pills present with data-testid reapply-LAB-2026-0045-0 (Labor 1 · 11:00-12:00) and reapply-LAB-2026-0045-1 (Labor 2 · 09:00-11:00)",
+    "Clicking first pill navigates to /pesan?nim=4011999031&nama=Mhs+Dua&kelas=1B&room_id=labor-1&date=2027-09-06&start_time=11:00&end_time=12:00&purpose=Test+B&participants=6",
+    "prefilled-banner visible with correct copy 'Form telah diisi otomatis dengan slot alternatif...'",
+    "Form fields prefilled: nim=4011999031, nama=Mhs Dua, kelas=1B, room=labor-1, date=2027-09-06, start=11:00, end=12:00",
+    "Direct /pesan (no query) hides prefilled-banner and applies defaults (nim empty, start=08:00, end=10:00)"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

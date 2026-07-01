@@ -450,6 +450,7 @@ def sanitize_booking(b: dict) -> dict:
         "cancelled_at": b["cancelled_at"].isoformat() if b.get("cancelled_at") else None,
         "reschedule_logs": b.get("reschedule_logs", []),
         "auto_rejected": bool(b.get("auto_rejected", False)),
+        "alternatives": b.get("alternatives", []),
     }
 
 async def generate_booking_code() -> str:
@@ -593,9 +594,9 @@ def _fmt_date_id(date_str: str) -> str:
     return f"{d.day} {bulan[d.month]} {d.year}"
 
 
-async def build_layer2_rejection_message(rejected: dict, approved: dict) -> str:
-    """Build an Indonesian rejection message with alternative slot suggestions
-    for a booking auto-rejected because another overlapping booking was approved."""
+async def build_layer2_rejection_message(rejected: dict, approved: dict) -> Dict[str, Any]:
+    """Build a structured payload (message + machine-readable alternatives) for a
+    booking auto-rejected because another overlapping booking was approved."""
     s = await get_settings()
     date_str = approved["date"]
     d = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -607,13 +608,18 @@ async def build_layer2_rejection_message(rejected: dict, approved: dict) -> str:
             f"{approved['start_time']}–{approved['end_time']} pada {date_id} "
             f"sudah disetujui untuk pemesan lain.")
 
+    fallback = " Tidak ada slot kosong lain di hari yang sama, silakan pilih tanggal lain."
+
     if not oh.get("open"):
-        return base + " Tidak ada slot kosong lain di hari yang sama, silakan pilih tanggal lain."
+        return {"message": base + fallback, "alternatives": []}
 
     open_m = time_to_min(oh["start"])
     close_m = time_to_min(oh["end"])
+    orig_dur = time_to_min(rejected["end_time"]) - time_to_min(rejected["start_time"])
+    if orig_dur <= 0: orig_dur = 60
 
-    alternatives: List[str] = []
+    alternatives_text: List[str] = []
+    alternatives_data: List[Dict[str, Any]] = []
 
     # 1. Same room — earliest free slot AFTER the approved end (within operating hours)
     same_room_busy = await db.bookings.find({
@@ -622,21 +628,31 @@ async def build_layer2_rejection_message(rejected: dict, approved: dict) -> str:
         "_id": {"$ne": rejected["_id"]},
     }).to_list(200)
     approved_end_m = time_to_min(approved["end_time"])
-    # find earliest free start >= approved_end within operating hours (same room)
     if approved_end_m < close_m:
         busy_intervals = sorted([(time_to_min(x["start_time"]), time_to_min(x["end_time"])) for x in same_room_busy])
         cur = max(approved_end_m, open_m)
         free_start = None
+        block_end = close_m
         for st, en in busy_intervals:
             if en <= cur: continue
             if st > cur:
                 free_start = cur
+                block_end = st
                 break
             cur = max(cur, en)
         if free_start is None and cur < close_m:
             free_start = cur
+            block_end = close_m
         if free_start is not None and free_start < close_m:
-            alternatives.append(f"{approved['room_name']} jam {free_start//60:02d}:{free_start%60:02d} ke atas")
+            alt_end = min(free_start + orig_dur, block_end)
+            alternatives_text.append(f"{approved['room_name']} jam {free_start//60:02d}:{free_start%60:02d} ke atas")
+            alternatives_data.append({
+                "room_id": approved["room_id"], "room_name": approved["room_name"],
+                "date": date_str,
+                "start_time": f"{free_start//60:02d}:{free_start%60:02d}",
+                "end_time": f"{alt_end//60:02d}:{alt_end%60:02d}",
+                "kind": "same_room_later",
+            })
 
     # 2. Other rooms — same time slot still free on that date?
     rooms = await db.rooms.find({"active": True}).to_list(20)
@@ -648,12 +664,19 @@ async def build_layer2_rejection_message(rejected: dict, approved: dict) -> str:
             [STATUS_MENUNGGU, STATUS_DISETUJUI],
         )
         if not other_conflicts:
-            alternatives.append(f"{r['name']} jam {approved['start_time']}–{approved['end_time']}")
+            alternatives_text.append(f"{r['name']} jam {approved['start_time']}–{approved['end_time']}")
+            alternatives_data.append({
+                "room_id": r["_id"], "room_name": r["name"],
+                "date": date_str,
+                "start_time": approved["start_time"], "end_time": approved["end_time"],
+                "kind": "other_room_same_time",
+            })
 
-    if not alternatives:
-        return base + " Tidak ada slot kosong lain di hari yang sama, silakan pilih tanggal lain."
+    if not alternatives_text:
+        return {"message": base + fallback, "alternatives": []}
 
-    return base + " Slot yang masih tersedia di hari yang sama: " + ", atau ".join(alternatives) + "."
+    msg = base + " Slot yang masih tersedia di hari yang sama: " + ", atau ".join(alternatives_text) + "."
+    return {"message": msg, "alternatives": alternatives_data}
 
 @api.get("/bookings/check")
 async def check_status(code: Optional[str] = None, nim: Optional[str] = None):
@@ -784,12 +807,13 @@ async def approve_booking(booking_id: str, user: dict = Depends(require_role("ke
         [STATUS_MENUNGGU], exclude_id=updated["_id"],
     )
     for ov in overlapping:
-        msg = await build_layer2_rejection_message(ov, updated)
+        result = await build_layer2_rejection_message(ov, updated)
         await db.bookings.update_one({"_id": ov["_id"]}, {"$set": {
             "status": STATUS_DITOLAK,
             "approved_by": user["email"],
             "approved_at": now_utc(),
-            "rejection_reason": msg,
+            "rejection_reason": result["message"],
+            "alternatives": result["alternatives"],
             "auto_rejected": True,
         }})
         rejected_doc = await db.bookings.find_one({"_id": ov["_id"]})

@@ -1,18 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, formatApiError, parseConflictDetail } from "@/lib/api";
 import { toast } from "sonner";
 import { Copy, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 export default function PesanRuangan() {
+  const [urlParams] = useSearchParams();
   const [rooms, setRooms] = useState([]);
   const [settings, setSettings] = useState(null);
   const [captcha, setCaptcha] = useState({ a: 0, b: 0 });
   const [form, setForm] = useState({
-    nim: "", nama: "", kelas: "", room_id: "", date: "",
-    start_time: "08:00", end_time: "10:00", purpose: "", participants: 10,
+    nim: urlParams.get("nim") || "",
+    nama: urlParams.get("nama") || "",
+    kelas: urlParams.get("kelas") || "",
+    room_id: urlParams.get("room_id") || "",
+    date: urlParams.get("date") || "",
+    start_time: urlParams.get("start_time") || "08:00",
+    end_time: urlParams.get("end_time") || "10:00",
+    purpose: urlParams.get("purpose") || "",
+    participants: urlParams.get("participants") || 10,
     contact: "", captcha_answer: "",
   });
+  const prefilled = !!urlParams.get("room_id");
   const [submitting, setSubmitting] = useState(false);
   const [successResult, setSuccessResult] = useState(null);
   const [conflictInfo, setConflictInfo] = useState(null);
@@ -125,6 +134,11 @@ export default function PesanRuangan() {
         </Link>
         <div className="mt-4 label-eyebrow">FORMULIR</div>
         <h1 className="font-display text-4xl mt-1">Ajukan Pemakaian Ruangan Labor</h1>
+        {prefilled && (
+          <div className="mt-3 bg-emerald-50 border border-emerald-200 p-3 rounded-sm text-sm text-emerald-800" data-testid="prefilled-banner">
+            Form telah diisi otomatis dengan slot alternatif. Silakan periksa & lengkapi data pribadi Anda sebelum mengirim.
+          </div>
+        )}
         <p className="text-zinc-600 mt-2 text-sm max-w-2xl">
           Isi data lengkap. Pengajuan akan diverifikasi oleh Kepala Labor.
           Data mahasiswa bersifat self-input dan bukan verifikasi identitas resmi.
