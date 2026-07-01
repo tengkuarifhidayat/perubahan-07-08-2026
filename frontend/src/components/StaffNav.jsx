@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { LogOut, Building2 } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function StaffNav() {
   const { user, logout } = useAuth();
@@ -39,6 +40,7 @@ export default function StaffNav() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <span className="text-xs text-zinc-500 hidden md:block">{user.email} · <b>{user.role}</b></span>
           <button
             data-testid="logout-button"
