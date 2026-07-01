@@ -1,0 +1,41 @@
+{
+  "short_name": "Labor FH UNRI",
+  "name": "Sistem Pemesanan Ruangan Labor - FH UNRI",
+  "description": "Pesan ruangan laboratorium Fakultas Hukum, Universitas Riau.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f5f5",
+  "theme_color": "#09090b",
+  "lang": "id-ID",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ajukan Pemesanan",
+      "short_name": "Pesan",
+      "url": "/pesan",
+      "description": "Ajukan pemakaian ruangan labor"
+    },
+    {
+      "name": "Cek Status",
+      "short_name": "Status",
+      "url": "/cek-status",
+      "description": "Cek status pengajuan Anda"
+    }
+  ]
+}

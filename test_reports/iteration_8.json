@@ -1,0 +1,20 @@
+{
+  "summary": "PWA support (manifest, service worker, icons, meta tags) verified end-to-end. All assets served with correct status, MIME types, and content. Service worker registers and takes control on the deployed URL. Backend regression (admin login + public booking) still works — SW correctly bypasses /api/ requests.",
+  "tested_scope": ["frontend", "backend", "integration"],
+  "passed": [
+    "GET /manifest.json -> 200, application/json, contains name='Sistem Pemesanan Ruangan Labor - FH UNRI', short_name='Labor FH UNRI', display=standalone, theme_color=#09090b, 2 icons (192+512, any maskable), shortcuts /pesan and /cek-status, lang=id-ID",
+    "GET /service-worker.js -> 200, application/javascript, 1161 bytes (bypasses /api/ and /ws)",
+    "GET /icons/icon-192.png -> 200, image/png, 764 bytes",
+    "GET /icons/icon-512.png -> 200, image/png, 2233 bytes",
+    "index.html contains <link rel=manifest href=/manifest.json>, <meta name=theme-color content=#09090b>, <link rel=apple-touch-icon href=/icons/icon-192.png>, <title>Sistem Pemesanan Ruangan Labor · FH UNRI</title>",
+    "POST /api/auth/login (admin@fh.unri.ac.id/admin123) -> 200 with access_token cookie",
+    "POST /api/bookings/public with fresh X-Forwarded-For -> 200, booking code LAB-2026-0047 created, status='menunggu'",
+    "Landing page renders (body 799 chars). Service worker registered: scriptURL=/service-worker.js, scope=/, navigator.serviceWorker.controller is non-null after reload"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "notes": "Console shows 4x 401 from /api/auth/me on public landing — expected (no session on public page), unrelated to PWA changes.",
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
