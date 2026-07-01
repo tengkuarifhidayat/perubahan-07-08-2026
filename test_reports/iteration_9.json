@@ -1,0 +1,18 @@
+{
+  "summary": "Frontend-only verification of TU calendar + Kiosk TV timezone bug fix (ymd() using local date parts). Playwright launched with timezone_id='Asia/Jakarta' (UTC+7) to reproduce the original off-by-one bug environment. Used pre-existing approved booking LAB-2026-0048 (2026-07-02, Labor 1, 09:00-11:00, disetujui). Kiosk token regenerated for /kiosk/tv access. All primary and regression checks passed.",
+  "tested_scope": ["frontend", "integration"],
+  "passed": [
+    "TU /dasbor/tu (admin) navigated to Juli 2026 — cell data-testid='day-2026-07-02' contains chip '09:00 L1'",
+    "TU cell data-testid='day-2026-07-03' does NOT contain the 09:00 booking (shows only unrelated 08:00 L1 booking)",
+    "TU day-detail-list on click of July 2 shows LAB-2026-0048, DISETUJUI, Labor 1, 09:00–11:00 (regression: correct date/booking retained)",
+    "Kiosk TV /kiosk/tv?token=... navigated to Juli 2026 — July 2 cell shows '09:00 Labor 1', July 3 cell shows '08:00 Labor 1' (no shift)",
+    "Kiosk 'HARI INI · 2026-07-01' section renders today's date correctly under Asia/Jakarta timezone",
+    "Month header renders 'Juli 2026' and prev/next navigation works on both pages"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Bug fix verified — bookings no longer render one column to the right in positive-UTC-offset timezones. Same behavior confirmed on TataUsahaDashboard and KioskTV since both share the same local-date ymd() helper."
+}

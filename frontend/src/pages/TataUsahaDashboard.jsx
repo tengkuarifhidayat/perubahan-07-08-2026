@@ -7,7 +7,15 @@ import { useBookingSocket } from "@/lib/ws";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 
 function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
-function ymd(d) { return d.toISOString().slice(0, 10); }
+function ymd(d) {
+  // Use LOCAL date parts — toISOString() converts to UTC which shifts the
+  // day for users in non-UTC timezones (e.g. WIB UTC+7), causing bookings
+  // to render one column off in the grid.
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 function daysInMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
 
 export default function TataUsahaDashboard() {
