@@ -449,6 +449,7 @@ def sanitize_booking(b: dict) -> dict:
         "created_at": b["created_at"].isoformat() if b.get("created_at") else None,
         "cancelled_at": b["cancelled_at"].isoformat() if b.get("cancelled_at") else None,
         "reschedule_logs": b.get("reschedule_logs", []),
+        "auto_rejected": bool(b.get("auto_rejected", False)),
     }
 
 async def generate_booking_code() -> str:

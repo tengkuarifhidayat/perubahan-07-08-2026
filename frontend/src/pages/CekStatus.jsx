@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api, formatApiError } from "@/lib/api";
 import { toast } from "sonner";
 import StatusPill, { RoomChip } from "@/components/StatusPill";
-import { Search, ArrowLeft, X, Pencil } from "lucide-react";
+import { Search, ArrowLeft, X, Pencil, ShieldAlert } from "lucide-react";
 
 export default function CekStatus() {
   const [params] = useSearchParams();
@@ -85,7 +85,14 @@ export default function CekStatus() {
                     </span>
                   </div>
                   {b.rejection_reason && (
-                    <div className="mt-2 text-sm text-red-700">Alasan penolakan: {b.rejection_reason}</div>
+                    <div className="mt-3 bg-red-50 border border-red-200 p-3 rounded-sm">
+                      {b.auto_rejected && (
+                        <span className="pill pill-ditolak mb-2" data-testid={`auto-rejected-badge-${b.code}`}>
+                          <ShieldAlert className="w-3 h-3" /> Auto-rejected
+                        </span>
+                      )}
+                      <div className="text-sm text-red-800 mt-1 leading-relaxed">{b.rejection_reason}</div>
+                    </div>
                   )}
                 </div>
                 <StatusPill status={b.status} />
