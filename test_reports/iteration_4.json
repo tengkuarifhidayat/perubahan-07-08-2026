@@ -1,0 +1,17 @@
+{
+  "summary": "Verified rate-limit bug fix on POST /api/bookings/public. get_client_ip() correctly extracts real client IP from X-Forwarded-For so quota is scoped per-user rather than per-ingress-IP. All 5 backend scenarios in the review request passed.",
+  "tested_scope": ["backend"],
+  "passed": [
+    "Test 1 - Fresh X-Forwarded-For 203.0.113.42 first submission → HTTP 200 with code LAB-2026-0011 (no false 429)",
+    "Test 2 - 3x wrong-captcha (400) from 203.0.113.55 did NOT consume quota; subsequent valid booking → HTTP 200 (LAB-2026-0012). Confirms failed submissions never persist and don't count.",
+    "Test 3 - 5 valid bookings from 203.0.113.77 all returned 200; 6th returned HTTP 429 with detail 'Terlalu banyak pengajuan dari perangkat ini. Coba lagi dalam 1 jam.' (Indonesian, mentions 1 jam)",
+    "Test 4 - Per-IP scoping: 203.0.113.100 hit its 5/hour limit (6th=429); simultaneously 203.0.113.101 could still submit successfully (200). Proves counter is per real IP, not shared.",
+    "Test 5 - 429 message exactly matches updated Indonesian string 'Terlalu banyak pengajuan dari perangkat ini. Coba lagi dalam 1 jam.'"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "not tested (per request)"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Frontend testing skipped per request. One 409 (time conflict) observed during test 4 setup on IP1 which was expected (overlapping slot chosen); resolved by choosing a non-conflicting slot. Conflict responses (409) correctly did NOT consume quota — verified indirectly (IP1 still needed a 5th SUCCESSFUL booking to trigger 429)."
+}

@@ -388,6 +388,19 @@ class BookingCreate(BaseModel):
     captcha_b: int
     captcha_answer: int
 
+def get_client_ip(request: Request) -> str:
+    """Extract real client IP behind proxies/ingress (X-Forwarded-For / X-Real-IP)."""
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        # First IP in the chain is the original client
+        first = xff.split(",")[0].strip()
+        if first:
+            return first
+    xreal = request.headers.get("x-real-ip")
+    if xreal:
+        return xreal.strip()
+    return request.client.host if request.client else "unknown"
+
 async def check_operating_hours(s: dict, date_str: str, start: str, end: str):
     d = datetime.strptime(date_str, "%Y-%m-%d").date()
     if date_str in s.get("holidays", []):
@@ -464,15 +477,20 @@ async def create_booking(body: BookingCreate, request: Request):
     if not re.match(s["nim_regex"], body.nim):
         raise HTTPException(400, "Format NIM tidak valid")
 
-    # rate limit by IP
-    ip = request.client.host if request.client else "unknown"
+    # rate limit by real client IP (behind ingress → use X-Forwarded-For)
+    ip = get_client_ip(request)
     limit = int(s.get("rate_limit_per_hour", 5))
     window_start = now_utc() - timedelta(hours=1)
-    count = await db.bookings.count_documents({
-        "_ip": ip, "created_at": {"$gte": window_start},
-    })
+    # Only count SUCCESSFULLY created bookings from the same real IP in the last hour.
+    # Failed submissions (captcha wrong, conflict, quota, etc.) are never inserted,
+    # so they naturally do NOT count toward this limit.
+    count = 0
+    if ip and ip != "unknown":
+        count = await db.bookings.count_documents({
+            "_ip": ip, "created_at": {"$gte": window_start},
+        })
     if count >= limit:
-        raise HTTPException(429, f"Terlalu banyak pengajuan dari perangkat ini. Coba lagi nanti.")
+        raise HTTPException(429, f"Terlalu banyak pengajuan dari perangkat ini. Coba lagi dalam 1 jam.")
 
     # time validation
     if time_to_min(body.start_time) >= time_to_min(body.end_time):
