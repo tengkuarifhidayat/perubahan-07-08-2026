@@ -21,7 +21,9 @@ export function formatApiError(err) {
     try {
       const j = JSON.parse(d);
       if (j?.message) return j.message;
-    } catch {}
+    } catch (_e) {
+      // detail is a plain string (not JSON) — return as-is below
+    }
     return d;
   }
   if (Array.isArray(d)) return d.map((e) => e?.msg || JSON.stringify(e)).join(" ");
@@ -31,7 +33,7 @@ export function formatApiError(err) {
 export function parseConflictDetail(err) {
   const d = err?.response?.data?.detail;
   if (typeof d === "string") {
-    try { return JSON.parse(d); } catch { return { message: d }; }
+    try { return JSON.parse(d); } catch (_e) { return { message: d }; }
   }
   return { message: "Bentrok" };
 }

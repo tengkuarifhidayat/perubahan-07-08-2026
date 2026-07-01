@@ -12,7 +12,10 @@ export function AuthProvider({ children }) {
       try {
         const { data } = await api.get("/auth/me");
         setUser(data);
-      } catch { setUser(null); }
+      } catch (_e) {
+        // Not authenticated is expected on first load — no logging needed
+        setUser(null);
+      }
       setLoading(false);
     })();
   }, []);
@@ -23,7 +26,7 @@ export function AuthProvider({ children }) {
     return data.user;
   };
   const logout = async () => {
-    try { await api.post("/auth/logout"); } catch {}
+    try { await api.post("/auth/logout"); } catch (e) { console.warn("logout error", e); }
     setUser(null);
   };
 

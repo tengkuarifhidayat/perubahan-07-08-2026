@@ -10,18 +10,22 @@ export function useBookingSocket(onEvent) {
       const ws = new WebSocket(wsURL());
       wsRef.current = ws;
       ws.onmessage = (m) => {
-        try { onEvent && onEvent(JSON.parse(m.data)); } catch {}
+        try { onEvent && onEvent(JSON.parse(m.data)); }
+        catch (e) { console.warn("ws parse error", e); }
       };
       ws.onclose = () => {
         if (alive) reconnectTimer = setTimeout(connect, 2500);
       };
-      ws.onerror = () => { try { ws.close(); } catch {} };
+      ws.onerror = () => {
+        try { ws.close(); } catch (e) { console.warn("ws close error", e); }
+      };
     }
     connect();
     return () => {
       alive = false;
       clearTimeout(reconnectTimer);
-      try { wsRef.current && wsRef.current.close(); } catch {}
+      try { wsRef.current && wsRef.current.close(); }
+      catch (e) { console.warn("ws cleanup error", e); }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

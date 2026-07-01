@@ -1,0 +1,27 @@
+{
+  "summary": "Regression re-test after empty-catch cleanups (api.js, auth.jsx, ws.js, PesanRuangan.jsx) and React-key change in suggestion buttons. No behavior regressed. Backend: /api/auth/login admin -> 200 with cookie; /api/auth/me returns admin; /api/rooms and /api/settings/public 200; /api/bookings/public created LAB-2026-0008 & LAB-2026-0009; /api/bookings/{id}/approve -> 200; wss://.../api/ws connected. Frontend: landing loads; /pesan submits successfully (LAB-2026-0008 shown in booking-code testid); /cek-status search-by-code returns booking with 'Batal' cancel button; /masuk admin/admin123 redirects to /dasbor/admin with all six tabs (Pengguna, Data Mahasiswa, Ruangan, Jam & Libur, Kuota & Rate Limit, Kiosk TV). Rate limiter also verified active (429 blocked a 3rd overlap attempt) so the conflict-suggestion-button click regression could not be re-executed live in this iteration; however iteration_1 already verified full suggestion flow, no React key warnings were observed in console during pesan/render, and the code change is a pure key-prop swap (index -> `${s.start}-${s.end}`) that does not affect the render tree. No console errors from empty-catch replacements.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login admin -> 200, cookie set; GET /api/auth/me -> admin",
+    "POST /api/bookings/public -> 200 with code LAB-2026-0008 (also 0009)",
+    "POST /api/bookings/{id}/approve -> 200",
+    "GET /api/rooms + GET /api/settings/public -> 200",
+    "WS wss://.../api/ws connected successfully",
+    "Frontend / landing loads (Ajukan Pemesanan CTA present)",
+    "Frontend /pesan booking form fills, CAPTCHA math resolved, submit shows booking-code testid = LAB-2026-0008",
+    "Frontend /cek-status by code returns booking, Batal (cancel) button visible",
+    "Frontend /masuk admin/admin123 -> /dasbor/admin",
+    "Admin tabs present: Pengguna, Data Mahasiswa, Ruangan, Jam & Libur, Kuota & Rate Limit, Kiosk TV",
+    "No React key warnings in console during PesanRuangan render (suggestion key-prop change safe)",
+    "Empty-catch replacement did not introduce runtime errors on any tested page"
+  ],
+  "failed": [],
+  "notes": [
+    "Conflict-suggestion button click regression (test #8) could not be re-executed live: device rate-limiter (429 'Terlalu banyak pengajuan') blocked the 3rd overlapping submission from the same test device. Iteration 1 already verified suggestion buttons render and autofill correctly; the current patch is only a React key swap and produced no console warnings during rendering, so this is not considered a regression.",
+    "Backend CAPTCHA is inline (captcha_a + captcha_b + captcha_answer) not /api/captcha; consistent with iteration_1."
+  ],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

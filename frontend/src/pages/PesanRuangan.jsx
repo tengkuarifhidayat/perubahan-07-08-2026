@@ -34,7 +34,7 @@ export default function PesanRuangan() {
       try {
         const { data } = await api.get(`/mahasiswa/${form.nim}`);
         if (data && data.nama && !form.nama) setForm((f) => ({ ...f, nama: data.nama, kelas: f.kelas || data.kelas || "" }));
-      } catch {}
+      } catch (_e) { /* NIM not yet cached — silent */ }
     }, 400);
     return () => clearTimeout(t);
   }, [form.nim]); // eslint-disable-line
@@ -237,8 +237,8 @@ export default function PesanRuangan() {
                   <>
                     <div className="label-eyebrow text-red-700 mt-4">SLOT KOSONG</div>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {conflictInfo.suggestions.map((s, i) => (
-                        <button key={i} type="button"
+                      {conflictInfo.suggestions.map((s) => (
+                        <button key={`${s.start}-${s.end}`} type="button"
                           onClick={() => setForm({ ...form, start_time: s.start, end_time: s.end })}
                           className="text-xs px-2 py-1 border border-red-300 bg-white rounded-sm hover:bg-red-100">
                           {s.start}–{s.end}
