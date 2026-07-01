@@ -876,6 +876,14 @@ async def reschedule_booking(booking_id: str, body: RescheduleBody, user: dict =
     })
     updated = await db.bookings.find_one({"_id": booking_id})
     await broadcast_event({"type": "booking_updated", "booking": sanitize_booking(updated)})
+
+    # Notify Kepala Labor about the reschedule so they know their previously-
+    # approved slot has been moved by Tata Usaha.
+    msg = (f"Jadwal {b['code']} ({b['nama']}) diubah oleh TU: "
+           f"{b['room_name']} {b['date']} {b['start_time']}–{b['end_time']} "
+           f"→ {room['name']} {body.date} {body.start_time}–{body.end_time}")
+    await notify_role("kepala_labor", msg, "booking_rescheduled", booking_id)
+
     return sanitize_booking(updated)
 
 # --------------------------- Reports Export ---------------------------

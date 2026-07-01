@@ -1,0 +1,18 @@
+{
+  "summary": "Reschedule feature fully validated. Backend: reschedule endpoint appends structured reschedule_logs and notifies all kepala_labor users with type='booking_rescheduled' containing code + name + old & new room/time separated by '→'. /bookings/check exposes reschedule_logs. Reschedule on non-approved booking returns 400. Frontend: /cek-status renders amber panel with data-testid=reschedule-log-{CODE}, correct label 'RIWAYAT PERUBAHAN JADWAL OLEH TU', multiple <li> entries in chronological order matching the required pattern. Regression: no panel on booking without reschedule.",
+  "tested_scope": ["backend", "frontend", "integration"],
+  "passed": [
+    "POST /api/bookings/{id}/reschedule as TU returns 200 with reschedule_logs entry containing at/by/reason/from{room_id,room_name,date,start,end}/to{room_id,room_name,date,start,end}",
+    "Kepala Labor GET /api/notifications includes booking_rescheduled notif containing booking code, mahasiswa name, old room+date+time, new room+date+time, and '→' arrow",
+    "GET /api/bookings/check?code=... returns reschedule_logs in response bookings[0]",
+    "Second reschedule appends a 2nd log entry (2 total, chronological order preserved)",
+    "Regression: reschedule on booking with status='menunggu' returns 400 with message 'Hanya jadwal yang sudah disetujui yang dapat diubah oleh TU'",
+    "Frontend amber panel [data-testid=reschedule-log-LAB-2026-0050] visible with title, 2 <li> matching 'Jadwal diubah oleh Tata Usaha pada ...: semula ..., diubah menjadi ...' + Alasan line",
+    "Regression: LAB-2026-0049 (menunggu, no logs) does NOT render the amber panel"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

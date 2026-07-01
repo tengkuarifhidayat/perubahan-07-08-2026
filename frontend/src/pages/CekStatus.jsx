@@ -120,6 +120,24 @@ export default function CekStatus() {
                       )}
                     </div>
                   )}
+                  {b.reschedule_logs && b.reschedule_logs.length > 0 && (
+                    <div className="mt-3 bg-amber-50 border border-amber-200 p-3 rounded-sm" data-testid={`reschedule-log-${b.code}`}>
+                      <div className="label-eyebrow text-amber-800">RIWAYAT PERUBAHAN JADWAL OLEH TU</div>
+                      <ul className="mt-2 text-sm text-amber-900 space-y-1.5">
+                        {b.reschedule_logs.map((log, i) => {
+                          const at = log.at ? new Date(log.at).toLocaleString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+                          return (
+                            <li key={`${log.at}-${i}`} className="leading-relaxed">
+                              <b>Jadwal diubah oleh Tata Usaha pada {at}</b>:
+                              {" "}semula {log.from.room_name} {log.from.date} {log.from.start}–{log.from.end},
+                              {" "}diubah menjadi <b>{log.to.room_name} {log.to.date} {log.to.start}–{log.to.end}</b>.
+                              {log.reason && <span className="block text-xs text-amber-800 mt-0.5">Alasan: {log.reason}</span>}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
                 </div>
                 <StatusPill status={b.status} />
               </div>
