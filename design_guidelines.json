@@ -1,0 +1,96 @@
+{
+  "theme": "LIGHT",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "emotional_tone": "Authoritative, Clear, Functional, Professional",
+  "design_philosophy": "Prevent conflicts through absolute clarity. No decorative gradients; rely on strict grid layouts, sharp typography, and high-contrast status colors to guide the user. The UI must feel like a modern, reliable institutional tool, not a playful social app.",
+  "typography": {
+    "fonts": {
+      "heading": "Cabinet Grotesk",
+      "body": "IBM Plex Sans",
+      "mono": "JetBrains Mono"
+    },
+    "scale_rules": {
+      "h1": "text-4xl sm:text-5xl font-black tracking-tight text-zinc-900",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900",
+      "h3": "text-xl sm:text-2xl font-semibold text-zinc-800",
+      "body": "text-base text-zinc-600 leading-relaxed",
+      "labels": "text-xs font-bold uppercase tracking-[0.15em] text-zinc-500",
+      "kiosk_tv_display": "Base text must be text-2xl or text-3xl. Headings text-6xl. No text smaller than text-xl."
+    }
+  },
+  "colors": {
+    "background": {
+      "app": "#F4F4F5",
+      "surface": "#FFFFFF",
+      "kiosk": "#09090B"
+    },
+    "text": {
+      "primary": "#09090B",
+      "secondary": "#52525B",
+      "inverse": "#FFFFFF"
+    },
+    "borders": {
+      "default": "#E4E4E7",
+      "focus": "#09090B"
+    },
+    "brand_accents": {
+      "primary": "#09090B",
+      "primary_hover": "#27272A"
+    },
+    "status": {
+      "approved": { "bg": "#DCFCE7", "text": "#166534", "border": "#BBF7D0" },
+      "pending": { "bg": "#FEF9C3", "text": "#854D0E", "border": "#FEF08A" },
+      "rejected": { "bg": "#FEE2E2", "text": "#991B1B", "border": "#FECACA" }
+    },
+    "rooms": {
+      "labor_1": { "bg": "#E0F2FE", "text": "#075985", "border": "#BAE6FD" },
+      "labor_2": { "bg": "#F3E8FF", "text": "#6B21A8", "border": "#E9D5FF" }
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous spacing (p-8 to p-12) for containers. Tight, structured spacing (gap-4) for data correlation.",
+    "grids": {
+      "booking_page": "Bento-style layout. grid-cols-1 lg:grid-cols-12 gap-8. Form takes col-span-5, Visual Calendar/Context takes col-span-7.",
+      "dashboard": "Control Room Grid. grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6. Use h-full to stretch cards.",
+      "calendar": "Grid borders ('Technical Look'). border-collapse with subtle border-r and border-b on cells. No gaps between days."
+    },
+    "surfaces": {
+      "cards": "Flat solid background (bg-white), 1px subtle border (border-zinc-200), NO shadow by default. Hover adds shadow-sm and -translate-y-[2px].",
+      "tv_kiosk": "High contrast dark mode (bg-zinc-950). Neon/bright accents for readability from a distance. 100vw/100vh layout, no scrolling allowed."
+    }
+  },
+  "components": {
+    "navigation": "Sticky top nav with glassmorphism (backdrop-blur-md bg-white/80 border-b border-zinc-200). Must contain UNRI Faculty of Law branding and primary CTA.",
+    "buttons": "Sharp corners (rounded-none or rounded-sm). High contrast. Primary: bg-zinc-900 text-white. Secondary: bg-white text-zinc-900 border border-zinc-300.",
+    "inputs": "Shadcn inputs. Override radius to rounded-sm. Focus state MUST be focus:ring-2 focus:ring-zinc-900 focus:border-transparent.",
+    "calendar": {
+      "interaction": "Clicking an event opens a right-side slide-over panel (Sheet component), NOT a modal dialog, to keep context.",
+      "event_style": "Minimalist. Left border 4px thick colored by Room (Labor 1/2). Background colored by Status (Pending/Approved)."
+    },
+    "tv_kiosk": "Read-only. Full-screen monthly or weekly grid. Auto-paginates or auto-scrolls if events overflow. Show a pulsating 'Live' WebSocket indicator in the top right. Font sizes scaled up 2x."
+  },
+  "media": {
+    "hero_background": {
+      "url": "https://images.pexels.com/photos/20213227/pexels-photo-20213227.jpeg",
+      "category": "public_booking_page_background",
+      "description": "Classical university law building architecture. Use as a left/right split background or hero section background with a bg-white/80 overlay for the public Mahasiswa booking portal."
+    },
+    "auth_background": {
+      "url": "https://images.pexels.com/photos/14902046/pexels-photo-14902046.jpeg",
+      "category": "staff_login_background",
+      "description": "Modern university facade. Use as the background for the staff (Kepala Labor, TU, Admin) login page with a dark overlay (bg-zinc-900/60)."
+    }
+  },
+  "icons_library": "lucide-react",
+  "instructions_to_main_agent": [
+    "ALL text and UI elements MUST be in Indonesian (e.g., 'Cek Status', 'Pesan Ruangan', 'Tolak', 'Setujui', 'Dasbor').",
+    "DO NOT use 'Inter' font. Import and apply 'Cabinet Grotesk' for headings and 'IBM Plex Sans' for body.",
+    "Every interactive element MUST have a `data-testid` attribute (e.g., data-testid='submit-booking-button').",
+    "Implement the TV Kiosk mode at a specific route (e.g., /kiosk/tv). This route MUST have a dark theme, massive fonts, and hide all navigation bars.",
+    "For the Mahasiswa booking form, it is unauthenticated. Ensure CAPTCHA (or a mock equivalent) and rate limiting are visually accounted for.",
+    "The Check Status page should be a minimal, high-contrast search bar where students enter their LAB-2026-XXXX code to get a large, clear status stamp.",
+    "Use Shadcn UI extensively for the staff dashboards, but strip out the default soft shadows to match the 'Swiss & High-Contrast' archetype.",
+    "Implement standard overlapping conflict detection visually in the calendar (e.g., side-by-side chips if times overlap).",
+    "Since the environment uses .js files, ensure Shadcn components and all React code are generated as JavaScript (.js/.jsx) instead of TypeScript."
+  ]
+}
