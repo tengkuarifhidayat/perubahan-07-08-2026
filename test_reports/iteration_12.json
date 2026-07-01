@@ -1,0 +1,20 @@
+{
+  "summary": "Kiosk TV dual-mode ('Hari Ini' default + 'Bulanan') tested end-to-end. Regenerated kiosk token, created + admin-approved 2 bookings (today Labor 1 09:00-11:00 Budi Testtoday, tomorrow Labor 2 13:00-15:00 Siti Testbesok). Verified default today view, toggle switching both ways, LIVE indicator, today's booking card content, tomorrow section rendering, month view + today's green ring highlight, and invalid token screen. All 8 checks passed.",
+  "tested_scope": ["frontend", "integration"],
+  "passed": [
+    "Default mode is 'today': [data-testid=today-view] visible, [data-testid=month-view] not rendered on fresh load",
+    "Header toggle [data-testid=kiosk-mode-toggle] contains [data-testid=mode-today] and [data-testid=mode-month]",
+    "LIVE indicator + clock + date visible in header",
+    "Today's approved booking rendered as large card (time 09:00–11:00, Labor 1, Budi Testtoday, Kelas 3A, purpose)",
+    "Tomorrow section rendered as smaller cards with [data-testid=tomorrow-list] (13:00–15:00 Labor 2 Siti Testbesok · 3B)",
+    "Click [data-testid=mode-month] switches to month grid; today-view removed from DOM; today's cell has ring-emerald-500 highlight (1 cell)",
+    "Click [data-testid=mode-today] restores today-view and removes month-view from DOM",
+    "Invalid token URL renders 'Token tidak valid.' message as expected"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Real-time WS/polling regression was not explicitly stressed but the load path runs on approval events; day view reflected fresh approvals correctly. Test data uses date TZ Asia/Jakarta = 2026-07-01."
+}

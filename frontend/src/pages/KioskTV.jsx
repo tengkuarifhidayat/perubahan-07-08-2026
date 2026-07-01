@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useBookingSocket } from "@/lib/ws";
+import { CalendarDays, LayoutList } from "lucide-react";
 
 function ymd(d) {
   const y = d.getFullYear();
@@ -19,6 +20,7 @@ export default function KioskTV() {
   const [now, setNow] = useState(new Date());
   const [bookings, setBookings] = useState([]);
   const [live, setLive] = useState(false);
+  const [mode, setMode] = useState("today"); // 'today' | 'month' — default 'today'
 
   useEffect(() => {
     if (!token) { setOk(false); return; }
@@ -69,10 +71,85 @@ export default function KioskTV() {
           <div className="mt-2 inline-flex items-center gap-2 text-lg text-emerald-400">
             <span className="live-dot" style={{ background: live ? "#22c55e" : "#4ade80" }}></span> LIVE
           </div>
+          <div className="mt-4 inline-flex bg-zinc-900 border border-zinc-700 rounded-sm p-1" data-testid="kiosk-mode-toggle">
+            <button
+              data-testid="mode-today"
+              onClick={() => setMode("today")}
+              className={`px-4 py-2 text-lg font-bold inline-flex items-center gap-2 ${mode === "today" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
+            >
+              <LayoutList className="w-5 h-5" /> Hari Ini
+            </button>
+            <button
+              data-testid="mode-month"
+              onClick={() => setMode("month")}
+              className={`px-4 py-2 text-lg font-bold inline-flex items-center gap-2 ${mode === "month" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
+            >
+              <CalendarDays className="w-5 h-5" /> Bulanan
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-12 gap-6">
+      {mode === "today" ? (
+        <TodayView now={now} grouped={grouped} />
+      ) : (
+        <MonthView cursor={cursor} grouped={grouped} today={today} firstWeekday={firstWeekday} totalDays={totalDays} />
+      )}
+    </div>
+  );
+}
+
+function TodayView({ now, grouped }) {
+  const todayKey = (() => { const d = now; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+  const tmr = new Date(now); tmr.setDate(tmr.getDate() + 1);
+  const tmrKey = `${tmr.getFullYear()}-${String(tmr.getMonth()+1).padStart(2,"0")}-${String(tmr.getDate()).padStart(2,"0")}`;
+  const todayList = grouped[todayKey] || [];
+  const tmrList = grouped[tmrKey] || [];
+
+  return (
+    <div className="mt-6" data-testid="today-view">
+      <div className="uppercase tracking-widest text-2xl text-zinc-400 mb-3">Hari Ini</div>
+      {todayList.length === 0 ? (
+        <div className="text-4xl text-zinc-500 border-2 border-dashed border-zinc-800 p-12 text-center" data-testid="today-empty">
+          Tidak ada jadwal hari ini
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {todayList.map((b) => (
+            <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-6`}>
+              <div className="font-display text-6xl leading-none">{b.start_time}<span className="text-4xl text-zinc-400 mx-2">–</span>{b.end_time}</div>
+              <div className="text-3xl font-bold mt-3">{b.room_name}</div>
+              <div className="text-2xl mt-1 text-zinc-200">{b.nama} · Kelas {b.kelas}</div>
+              <div className="text-xl mt-1 text-zinc-300">{b.purpose}</div>
+              {b.status === "menunggu" && <div className="mt-2 inline-block bg-yellow-500/20 text-yellow-300 px-3 py-1 text-lg font-bold">MENUNGGU</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="uppercase tracking-widest text-xl text-zinc-400 mt-10 mb-3">Jadwal Besok</div>
+      {tmrList.length === 0 ? (
+        <div className="text-2xl text-zinc-500 border border-dashed border-zinc-800 p-6 text-center" data-testid="tomorrow-empty">
+          Tidak ada jadwal besok
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="tomorrow-list">
+          {tmrList.map((b) => (
+            <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-4 opacity-90`}>
+              <div className="font-display text-4xl">{b.start_time}–{b.end_time}</div>
+              <div className="text-xl font-bold mt-1">{b.room_name}</div>
+              <div className="text-lg text-zinc-200">{b.nama} · {b.kelas}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MonthView({ cursor, grouped, today, firstWeekday, totalDays }) {
+  return (
+    <div className="mt-6 grid grid-cols-12 gap-6" data-testid="month-view">
         <div className="col-span-8">
           <div className="grid grid-cols-7 text-lg font-bold text-zinc-500">
             {["Sen","Sel","Rab","Kam","Jum","Sab","Min"].map((d) => <div key={d} className="p-2 border-b border-zinc-800">{d}</div>)}
@@ -81,7 +158,7 @@ export default function KioskTV() {
             {Array.from({ length: firstWeekday }).map((_, i) => <div key={`e${i}`} className="h-28 border-b border-r border-zinc-800/50 bg-zinc-950" />)}
             {Array.from({ length: totalDays }).map((_, i) => {
               const d = new Date(cursor.getFullYear(), cursor.getMonth(), i + 1);
-              const key = ymd(d);
+              const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
               const list = grouped[key] || [];
               const isToday = key === today;
               return (
@@ -104,8 +181,8 @@ export default function KioskTV() {
         <div className="col-span-4">
           <div className="uppercase tracking-widest text-xl text-zinc-400">Hari Ini · {today}</div>
           <div className="mt-3 space-y-3 max-h-[70vh] overflow-hidden">
-            {todayList.length === 0 && <div className="text-2xl text-zinc-500 border-2 border-dashed border-zinc-800 p-8 text-center">Tidak ada jadwal</div>}
-            {todayList.map((b) => (
+            {(grouped[today] || []).length === 0 && <div className="text-2xl text-zinc-500 border-2 border-dashed border-zinc-800 p-8 text-center">Tidak ada jadwal</div>}
+            {(grouped[today] || []).map((b) => (
               <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-4`}>
                 <div className="font-display text-4xl">{b.start_time}–{b.end_time}</div>
                 <div className="text-2xl font-bold mt-1">{b.room_name}</div>
@@ -117,6 +194,5 @@ export default function KioskTV() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
