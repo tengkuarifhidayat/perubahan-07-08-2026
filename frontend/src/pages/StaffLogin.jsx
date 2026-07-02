@@ -27,10 +27,7 @@ export default function StaffLogin() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      <div className="hidden lg:block relative">
-        <img src="https://static.prod-images.emergentagent.com/jobs/b598b567-f33a-4805-a749-3e9d0b8458ad/images/4bc5b9a75c3b0d53f5d86a695a00cf12ab423e615c1e68c3800b9c7d39be0f9b.png"
-          alt="Ilustrasi timbangan keadilan dan palu hakim" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-zinc-900/70" />
+      <div className="hidden lg:block relative bg-zinc-900">
         <div className="absolute inset-0 p-16 text-white flex flex-col justify-between">
           <div className="label-eyebrow text-white/60">FAKULTAS HUKUM · UNRI</div>
           <div>

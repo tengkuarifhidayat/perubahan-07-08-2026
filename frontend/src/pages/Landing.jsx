@@ -3,15 +3,7 @@ import { CalendarCheck, Search, LogIn, Building2 } from "lucide-react";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen relative">
-      <div className="absolute inset-0 z-0">
-        <img
-          src="https://static.prod-images.emergentagent.com/jobs/b598b567-f33a-4805-a749-3e9d0b8458ad/images/13672bb82479c96ef67f9b069e474302dbb277dc82ac94a3311ae03a8aa0835b.png"
-          alt="Ilustrasi timbangan keadilan dan palu hakim"
-          className="w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-white/85" />
-      </div>
+    <div className="min-h-screen relative bg-white">
 
       <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
