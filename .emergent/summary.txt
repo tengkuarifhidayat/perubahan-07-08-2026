@@ -1,0 +1,19 @@
+<analysis>testing_agent_v3find_conflictsPOST /api/bookings/public/app/backend/server.pybuild_layer2_rejection_message()/app/frontend/src/pages/KepalaLaborDashboard.jsxcreated_atsanitize_booking/app/backend/server.pymax_duration_enabledmax_duration_hourscreate_bookingedit_booking_public/app/frontend/src/pages/AdminDashboard.jsx/app/frontend/src/pages/KioskTV.jsx?mode=auto?mode=staticX-Forwarded-For/app/frontend/src/pages/PesanRuangan.jsx/app/backend/server.pycreate_bookingtext
+/app/
+├── backend/
+│   ├── .env
+│   ├── requirements.txt
+│   └── server.py              # Contains all FastAPI logic, MongoDB models, endpoints, WS
+├── frontend/
+│   ├── public/
+│   │   ├── manifest.json
+│   │   ├── service-worker.js
+│   │   └── index.html
+│   └── src/
+│       ├── components/        # StaffNav, NotificationBell, StatusPill
+│       │   └── ui/            # Shadcn UI components
+│       ├── lib/               # api.js, auth.jsx, ws.js
+│       ├── pages/             # Landing, PesanRuangan, CekStatus, Dashboards, KioskTV
+│       ├── App.js             # Routing and Auth Provider
+│       └── index.js
+usersroomsbookingssettingsnotifications/app/backend/server.py/app/frontend/src/pages/PesanRuangan.jsx/app/frontend/src/pages/CekStatus.jsx/app/frontend/src/pages/KioskTV.jsx/app/frontend/src/pages/AdminDashboard.jsx/app/frontend/src/components/NotificationBell.jsx/app/frontend/public/manifest.jsonservice-worker.js/app/memory/test_credentials.md/app/backend/server.pycreate_bookingfind_conflicts/app/frontend/src/pages/PesanRuangan.jsxPOST /api/auth/loginPOST /api/bookings/publicPOST /api/bookings/{id}/approvePOST /api/bookings/{id}/rescheduleGET /api/settings/publicGET /api/notificationsPUT /api/notifications/readd.toISOString().slice(0, 10)ymd()request.client.hostX-Forwarded-For/app/design_guidelines.json/app/memory/test_credentials.md/app/memory/PRD.md/app/test_reports/iteration_1.jsoniteration_13.json/app/test_reports/iteration_1.jsoniteration_13.json/app/memory/test_credentials.mdadmin@fh.unri.ac.idadmin123</analysis>
