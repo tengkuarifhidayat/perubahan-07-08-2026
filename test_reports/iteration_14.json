@@ -1,0 +1,44 @@
+{
+  "summary": "Verifikasi bug 'Layer 1 conflict tidak blokir booking kedua di UI'. Tidak dapat direproduksi — backend + frontend keduanya berfungsi dengan benar. 6/6 pytest passed dan test UI end-to-end (dua pengajuan slot persis sama, NIM berbeda) menunjukkan booking kedua diblokir HTTP 409 dan panel BENTROK (data-testid=conflict-info) muncul dengan pesan 'Slot ini sedang menunggu persetujuan mahasiswa lain...'. Booking-success tidak muncul di percobaan kedua. Fitur P0 durasi maksimal & timestamp Kepala Labor juga terverifikasi.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_flows": [
+    "POST /api/bookings/public (booking pertama) → 200 status=menunggu, kode LAB-2026-XXXX",
+    "POST /api/bookings/public (slot persis sama, NIM berbeda) → 409 dengan detail JSON: message 'Slot ini sedang menunggu persetujuan mahasiswa lain...', conflicts[], suggestions[]",
+    "Overlap parsial terhadap booking menunggu → 409 (Layer 1 aktif untuk overlap, bukan hanya persis sama)",
+    "Overlap terhadap booking disetujui → 409 dengan pesan berbeda 'Jadwal bentrok dengan pengajuan yang sudah disetujui'",
+    "PATCH /api/settings max_duration_enabled=true, hours=3 → POST booking 08:00-13:00 (5 jam) → 400 'Durasi pemesanan melebihi batas maksimal 3 jam per pengajuan'",
+    "PATCH /api/settings max_duration_enabled=false → durasi >3 jam kembali diizinkan",
+    "GET /api/bookings?status=menunggu → response menyertakan created_at (ISO)",
+    "UI /pesan submit pertama → tampilkan booking-success dengan kode. Submit kedua slot sama → tampilkan panel data-testid=conflict-info berisi pesan pending + daftar konflik + slot alternatif. booking-success tidak muncul.",
+    "UI /dasbor/kepala-labor tab Menunggu → 45 kartu booking, setiap kartu punya data-testid='submitted-<code>' dengan teks 'Diajukan pada 2 Juli 2026 pukul 09.27' — format benar."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_booking_conflicts.py",
+    "/app/test_reports/pytest/iteration_14.xml"
+  ],
+  "action_items": [
+    "Konfirmasi ke user: bug 'booking kedua diterima' TIDAK dapat direproduksi. Kemungkinan penyebab di sisi user: (a) form tidak di-reload (state React lama), (b) mengetes dengan slot berbeda tanpa sadar, (c) melihat sisa booking success dari sesi lain. Sarankan: buka /pesan di tab baru, submit pertama, catat kode, hard refresh, submit kedua dengan NIM baru — panel BENTROK harus muncul.",
+    "Pertimbangkan menonaktifkan/mereset kredensial default kalab@fh.unri.ac.id / password123 secara idempoten saat startup (saat ini akun ada tetapi password tidak cocok — testing agent perlu reset via admin)."
+  ],
+  "critical_code_review_comments": [
+    "server.py:526-541 Layer 1 conflict logic benar dan mengembalikan pesan yang tepat sesuai status.",
+    "PesanRuangan.jsx:83-92 dengan benar men-set conflictInfo saat 409 dan TIDAK men-set successResult, sehingga panel conflict-info tampil dan layar success tidak.",
+    "check_max_duration() bekerja dengan menit-basis; pesan error mengandung angka jam benar.",
+    "sanitize_booking() sudah mengekspos created_at (ISO string) → frontend KepalaLaborDashboard menggunakannya di fmtSubmitted() dengan format lokal ID."
+  ],
+  "updated_files": ["/app/backend/tests/test_booking_conflicts.py"],
+  "success_rate": {"backend": "100% (6/6)", "frontend": "100% (P0 flows)"},
+  "test_credentials": "admin@fh.unri.ac.id/admin123 (works). kalab@fh.unri.ac.id/password123 (reset via admin PATCH /api/users/{id}).",
+  "seed_data_creation": "Beberapa booking TEST_ dibuat di rooms Labor 1/2 pada tanggal weekday 40-150 hari ke depan. Rate limit sempat dinaikkan ke 500 selama testing lalu dikembalikan ke 5. max_duration_enabled=false.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Bug report 'Layer 1 tidak blokir di UI' TIDAK direproduksi. Semua P0 baru sudah tervalidasi backend+UI. Test file backend regresi ada di /app/backend/tests/test_booking_conflicts.py (perlu env REACT_APP_BACKEND_URL saat menjalankan, jalankan dengan `python -m pytest ... -o addopts=` karena pytest.ini memakai xdist yang bisa collision dengan flag lain). Test menggunakan tanggal random 40-150 hari ke depan + retry loop untuk menghindari collision dengan booking test lama."
+}
