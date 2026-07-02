@@ -173,6 +173,12 @@ async def startup():
             "created_at": now_utc(),
         })
         logger.info("Admin seeded: %s", admin_email)
+    elif not verify_password(admin_pw, existing["password_hash"]):
+        await db.users.update_one(
+            {"email": admin_email},
+            {"$set": {"password_hash": hash_password(admin_pw)}},
+        )
+        logger.info("Admin password updated from env: %s", admin_email)
 
     # seed rooms
     count = await db.rooms.count_documents({})
