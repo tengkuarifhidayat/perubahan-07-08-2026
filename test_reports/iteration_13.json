@@ -1,0 +1,18 @@
+{
+  "summary": "Verified reported 'login gagal' symptom. All auth flows work correctly. Backend: admin login returns 200 with cookie+JWT+admin role; wrong password returns 401 with exact message 'Email atau password salah'; GET /api/users returns 14 users including admin. Frontend: /masuk login with admin@fh.unri.ac.id/admin123 redirected to /dasbor/admin with welcome toast. No code/data bug — likely user typo (case-sensitive email or caps-lock on password).",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login admin@fh.unri.ac.id/admin123 -> 200, user.role=admin, JWT + cookie set",
+    "POST /api/auth/login wrong password -> 401 with detail 'Email atau password salah'",
+    "GET /api/users (admin cookie) -> 200, 14 users incl. admin@fh.unri.ac.id, kalab@fh.unri.ac.id, tu@fh.unri.ac.id",
+    "MongoDB users collection is not empty (14 users)",
+    "Frontend /masuk login -> redirect to /dasbor/admin (Panel Admin visible, welcome toast shown)"
+  ],
+  "failed": [],
+  "action_items": [
+    "Confirm to user: admin@fh.unri.ac.id / admin123 works end-to-end. Ask them to check caps-lock, email case (must be lowercase), or whether they were trying a self-created account. Suggest admin can reset staff passwords via Panel Admin > Pengguna."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
