@@ -124,6 +124,8 @@ DEFAULT_SETTINGS = {
     "rate_limit_per_hour": 5,
     "nim_regex": r"^\d{7,15}$",
     "kiosk_token": None,
+    "max_duration_enabled": False,
+    "max_duration_hours": 3,
 }
 
 async def get_settings() -> dict:
@@ -334,6 +336,8 @@ async def settings_public():
         "operating_hours": s["operating_hours"],
         "holidays": s["holidays"],
         "nim_regex": s["nim_regex"],
+        "max_duration_enabled": bool(s.get("max_duration_enabled", False)),
+        "max_duration_hours": int(s.get("max_duration_hours", 3)),
     }
 
 @api.get("/settings")
@@ -349,6 +353,8 @@ class SettingsPatch(BaseModel):
     sla_days: Optional[int] = None
     rate_limit_per_hour: Optional[int] = None
     nim_regex: Optional[str] = None
+    max_duration_enabled: Optional[bool] = None
+    max_duration_hours: Optional[int] = None
 
 @api.patch("/settings")
 async def settings_patch(body: SettingsPatch, user: dict = Depends(require_role("admin"))):
@@ -411,6 +417,13 @@ async def check_operating_hours(s: dict, date_str: str, start: str, end: str):
         raise HTTPException(400, "Ruangan tutup pada hari itu")
     if time_to_min(start) < time_to_min(oh["start"]) or time_to_min(end) > time_to_min(oh["end"]):
         raise HTTPException(400, f"Jam di luar jam operasional ({oh['start']}–{oh['end']})")
+
+def check_max_duration(s: dict, start: str, end: str):
+    if not s.get("max_duration_enabled"):
+        return
+    max_hours = int(s.get("max_duration_hours", 3))
+    if time_to_min(end) - time_to_min(start) > max_hours * 60:
+        raise HTTPException(400, f"Durasi pemesanan melebihi batas maksimal {max_hours} jam per pengajuan")
 
 async def find_conflicts(room_id: str, date_str: str, start: str, end: str,
                          statuses: List[str], exclude_id: Optional[str] = None) -> List[dict]:
@@ -498,6 +511,9 @@ async def create_booking(body: BookingCreate, request: Request):
     if time_to_min(body.start_time) >= time_to_min(body.end_time):
         raise HTTPException(400, "Jam mulai harus lebih awal dari jam selesai")
 
+    # max booking duration (configurable by Admin)
+    check_max_duration(s, body.start_time, body.end_time)
+
     # operating hours & holidays
     await check_operating_hours(s, body.date, body.start_time, body.end_time)
 
@@ -506,14 +522,21 @@ async def create_booking(body: BookingCreate, request: Request):
     if not room or not room.get("active", True):
         raise HTTPException(400, "Ruangan tidak tersedia")
 
-    # conflicts (block only against approved)
+    # conflicts — Layer 1: block against BOTH approved and pending bookings
     conflicts = await find_conflicts(body.room_id, body.date, body.start_time, body.end_time,
-                                     [STATUS_DISETUJUI])
+                                     [STATUS_DISETUJUI, STATUS_MENUNGGU])
     if conflicts:
         suggestions = suggest_free_slots(conflicts, s, body.date)
+        has_approved = any(c["status"] == STATUS_DISETUJUI for c in conflicts)
+        if has_approved:
+            msg = "Jadwal bentrok dengan pengajuan yang sudah disetujui"
+        else:
+            msg = ("Slot ini sedang menunggu persetujuan mahasiswa lain. "
+                   "Slot bisa terbuka kembali jika pengajuan tersebut ditolak — "
+                   "coba cek lagi nanti, atau pilih slot alternatif di bawah ini.")
         raise HTTPException(409, json.dumps({
-            "message": "Jadwal bentrok dengan pengajuan yang sudah disetujui",
-            "conflicts": [{"code": c["code"], "start": c["start_time"], "end": c["end_time"]} for c in conflicts],
+            "message": msg,
+            "conflicts": [{"code": c["code"], "start": c["start_time"], "end": c["end_time"], "status": c["status"]} for c in conflicts],
             "suggestions": suggestions,
         }))
 
@@ -710,11 +733,19 @@ async def edit_booking_public(code: str, body: BookingEdit):
     new_end = body.end_time or b["end_time"]
     if time_to_min(new_start) >= time_to_min(new_end):
         raise HTTPException(400, "Jam mulai harus lebih awal dari jam selesai")
+    check_max_duration(s, new_start, new_end)
     await check_operating_hours(s, new_date, new_start, new_end)
     conflicts = await find_conflicts(new_room, new_date, new_start, new_end,
-                                     [STATUS_DISETUJUI], exclude_id=b["_id"])
+                                     [STATUS_DISETUJUI, STATUS_MENUNGGU], exclude_id=b["_id"])
     if conflicts:
-        raise HTTPException(409, "Jadwal bentrok dengan pengajuan disetujui")
+        has_approved = any(c["status"] == STATUS_DISETUJUI for c in conflicts)
+        if has_approved:
+            msg = "Jadwal bentrok dengan pengajuan yang sudah disetujui"
+        else:
+            msg = ("Slot ini sedang menunggu persetujuan mahasiswa lain. "
+                   "Slot bisa terbuka kembali jika pengajuan tersebut ditolak — "
+                   "coba cek lagi nanti, atau pilih slot lain.")
+        raise HTTPException(409, json.dumps({"message": msg}))
     room = await db.rooms.find_one({"_id": new_room})
     if not room: raise HTTPException(400, "Ruangan tidak valid")
     patch = {"room_id": new_room, "room_name": room["name"], "date": new_date,

@@ -285,6 +285,21 @@ function QuotaTab() {
           </div>
         </div>
         <div>
+          <div className="font-heading">Durasi Maksimal Pemesanan</div>
+          <label className="flex items-center gap-2 mt-3 text-sm">
+            <input type="checkbox" checked={!!s.max_duration_enabled}
+              onChange={(e) => save({ max_duration_enabled: e.target.checked })} data-testid="maxduration-toggle" /> Aktifkan
+          </label>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm">Maks. durasi (jam):</span>
+            <input type="number" min={1} className="input w-24" value={s.max_duration_hours ?? 3}
+              disabled={!s.max_duration_enabled}
+              onChange={(e) => setS({ ...s, max_duration_hours: Number(e.target.value) })}
+              onBlur={(e) => save({ max_duration_hours: Number(e.target.value) })} data-testid="maxduration-input" />
+          </div>
+          <p className="text-xs text-zinc-500 mt-2">Pengajuan yang melebihi durasi ini akan otomatis ditolak saat submit.</p>
+        </div>
+        <div>
           <div className="font-heading">Format NIM (Regex)</div>
           <input className="input mt-3 w-full font-mono text-xs" value={s.nim_regex}
             onChange={(e) => setS({ ...s, nim_regex: e.target.value })}

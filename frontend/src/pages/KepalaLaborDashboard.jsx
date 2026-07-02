@@ -4,7 +4,17 @@ import { toast } from "sonner";
 import StaffNav from "@/components/StaffNav";
 import StatusPill, { RoomChip } from "@/components/StatusPill";
 import { useBookingSocket } from "@/lib/ws";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Clock } from "lucide-react";
+
+const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+function fmtSubmitted(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  const jam = String(d.getHours()).padStart(2, "0");
+  const menit = String(d.getMinutes()).padStart(2, "0");
+  return `Diajukan pada ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()} pukul ${jam}.${menit}`;
+}
 
 export default function KepalaLaborDashboard() {
   const [tab, setTab] = useState("menunggu");
@@ -84,6 +94,11 @@ export default function KepalaLaborDashboard() {
                       {b.date} · {b.start_time}–{b.end_time}
                     </span>
                   </div>
+                  {fmtSubmitted(b.created_at) && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-zinc-500" data-testid={`submitted-${b.code}`}>
+                      <Clock className="w-3.5 h-3.5" /> {fmtSubmitted(b.created_at)}
+                    </div>
+                  )}
                 </div>
                 {tab === "menunggu" && (
                   <div className="flex gap-2">

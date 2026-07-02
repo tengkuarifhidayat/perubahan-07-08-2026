@@ -50,7 +50,14 @@ Web-based booking system for 2 lab rooms (Labor 1 & Labor 2) at Fakultas Hukum, 
 - `/kiosk/tv?token=…` — Dark full-screen monthly calendar + today's schedule pane, live WebSocket updates
 
 ## Backlog / Next Actions
+### P0 (DONE — Jul 2026)
+- ✅ Layer 1 conflict: block student submit against BOTH 'menunggu' & 'disetujui' (differentiated message + suggestions) — create_booking & edit_booking_public
+- ✅ Submission timestamp on Kepala Labor cards ("Diajukan pada …")
+- ✅ Configurable max booking duration (max_duration_enabled/hours, default 3) — validated in create/edit, Admin Quota tab toggle
+
 ### P1
+- Kiosk TV auto-cycle (Hari Ini 60s / Bulanan 30s), Pause/Resume, auto-scroll, ?mode=auto|static dual URLs
+- Replace hero/illustration assets (current login hero shows a Telkom Univ building — needs neutral law/courtroom vector)
 - Email/WhatsApp notification for status changes to students (opt-in via contact field)
 - Notifications bell UI for staff (backend endpoint exists)
 - PWA manifest + service worker for "install to homescreen"

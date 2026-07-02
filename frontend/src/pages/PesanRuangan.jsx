@@ -190,6 +190,11 @@ export default function PesanRuangan() {
               <Field label="Jam Selesai" required>
                 <input required type="time" data-testid="input-end" value={form.end_time}
                   onChange={(e) => setForm({ ...form, end_time: e.target.value })} className="input" />
+                {settings?.max_duration_enabled && (
+                  <p className="text-xs text-zinc-500 mt-1" data-testid="maxduration-hint">
+                    Maks. durasi {settings.max_duration_hours} jam per pengajuan
+                  </p>
+                )}
               </Field>
             </div>
             <Field label="Keperluan / Agenda" required>
@@ -229,7 +234,7 @@ export default function PesanRuangan() {
             <div className="bg-white border border-zinc-200 p-6 rounded-sm">
               <div className="label-eyebrow">CATATAN PENTING</div>
               <ul className="mt-3 text-sm text-zinc-700 space-y-2 leading-relaxed">
-                <li>• Sistem akan menolak submit jika jadwal bentrok dengan pengajuan lain yang sudah disetujui.</li>
+                <li>• Sistem akan menolak submit jika jadwal bentrok dengan pengajuan lain yang <b>sudah disetujui</b> maupun yang <b>masih menunggu</b> persetujuan.</li>
                 <li>• NIM yang sudah pernah dipakai akan otomatis melengkapi Nama & Kelas.</li>
                 <li>• Setelah submit, Anda menerima Kode Booking untuk memantau status.</li>
                 <li>• Pembatalan bisa dilakukan sendiri di halaman Cek Status.</li>
