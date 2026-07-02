@@ -56,8 +56,8 @@ Web-based booking system for 2 lab rooms (Labor 1 & Labor 2) at Fakultas Hukum, 
 - ✅ Configurable max booking duration (max_duration_enabled/hours, default 3) — validated in create/edit, Admin Quota tab toggle
 
 ### P1
-- Kiosk TV auto-cycle (Hari Ini 60s / Bulanan 30s), Pause/Resume, auto-scroll, ?mode=auto|static dual URLs
-- Replace hero/illustration assets (current login hero shows a Telkom Univ building — needs neutral law/courtroom vector)
+- ✅ Kiosk TV auto-cycle (Hari Ini 60s / Bulanan 30s), Pause/Resume, auto-scroll + font scaling, dual URL ?mode=auto|static — DONE Jul 2026 (verified iteration_15)
+- Replace hero/illustration assets (login hero shows Telkom Univ building — needs neutral law/courtroom vector) — SEPARATE task, pending
 - Email/WhatsApp notification for status changes to students (opt-in via contact field)
 - Notifications bell UI for staff (backend endpoint exists)
 - PWA manifest + service worker for "install to homescreen"
