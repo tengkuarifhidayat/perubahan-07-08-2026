@@ -316,7 +316,9 @@ function KioskTab() {
   const load = () => api.get("/settings").then((r) => setS(r.data));
   useEffect(() => { load(); }, []);
   if (!s) return null;
-  const url = s.kiosk_token ? `${window.location.origin}/kiosk/tv?token=${s.kiosk_token}` : null;
+  const base = s.kiosk_token ? `${window.location.origin}/kiosk/tv?token=${s.kiosk_token}` : null;
+  const autoUrl = base ? `${base}&mode=auto` : null;
+  const staticUrl = base ? `${base}&mode=static` : null;
   const regen = async () => {
     try { const { data } = await api.post("/settings/kiosk-token/regenerate"); setS({ ...s, kiosk_token: data.kiosk_token }); toast.success("Token dibuat ulang"); }
     catch (err) { toast.error(formatApiError(err)); }
@@ -326,19 +328,30 @@ function KioskTab() {
     try { await api.post("/settings/kiosk-token/revoke"); setS({ ...s, kiosk_token: null }); toast.success("Token dicabut"); }
     catch (err) { toast.error(formatApiError(err)); }
   };
+  const copy = (u) => { navigator.clipboard.writeText(u); toast.success("Link disalin"); };
   return (
     <div className="bg-white border border-zinc-200 rounded-sm p-6 max-w-2xl">
       <div className="font-heading">Display TV — Token Read-Only</div>
-      <p className="text-sm text-zinc-600 mt-2">Buka link ini di layar TV ruang TU. Hanya menampilkan jadwal, tidak ada aksi apapun. Aman meski link diketahui orang lain.</p>
-      {url ? (
-        <div className="mt-4 p-3 bg-zinc-50 border border-zinc-200 rounded-sm font-mono text-xs break-all" data-testid="kiosk-url">{url}</div>
+      <p className="text-sm text-zinc-600 mt-2">Gunakan link di bawah pada layar TV. Hanya menampilkan jadwal, tidak ada aksi apapun. Aman meski link diketahui orang lain. Kedua link memakai token yang sama.</p>
+      {base ? (
+        <div className="mt-4 space-y-4">
+          <div data-testid="kiosk-url-auto-block">
+            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">TV Publik (Auto — bergantian Hari Ini 60s / Bulanan 30s)</div>
+            <div className="mt-1 p-3 bg-zinc-50 border border-zinc-200 rounded-sm font-mono text-xs break-all" data-testid="kiosk-url-auto">{autoUrl}</div>
+            <button onClick={() => copy(autoUrl)} data-testid="copy-kiosk-url-auto"
+              className="mt-2 px-3 py-1.5 border border-zinc-300 text-sm rounded-sm inline-flex items-center gap-1"><Copy className="w-4 h-4" /> Salin Link Auto</button>
+          </div>
+          <div data-testid="kiosk-url-static-block">
+            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">Monitor TU (Statis — selalu Hari Ini)</div>
+            <div className="mt-1 p-3 bg-zinc-50 border border-zinc-200 rounded-sm font-mono text-xs break-all" data-testid="kiosk-url-static">{staticUrl}</div>
+            <button onClick={() => copy(staticUrl)} data-testid="copy-kiosk-url-static"
+              className="mt-2 px-3 py-1.5 border border-zinc-300 text-sm rounded-sm inline-flex items-center gap-1"><Copy className="w-4 h-4" /> Salin Link Statis</button>
+          </div>
+        </div>
       ) : (
         <div className="mt-4 text-sm text-zinc-500">Belum ada token aktif.</div>
       )}
-      <div className="mt-4 flex gap-2 flex-wrap">
-        {url && <button onClick={() => { navigator.clipboard.writeText(url); toast.success("Link disalin"); }}
-          data-testid="copy-kiosk-url"
-          className="px-3 py-1.5 border border-zinc-300 text-sm rounded-sm inline-flex items-center gap-1"><Copy className="w-4 h-4" /> Salin</button>}
+      <div className="mt-6 flex gap-2 flex-wrap border-t border-zinc-200 pt-4">
         <button onClick={regen} data-testid="regen-kiosk"
           className="px-3 py-1.5 bg-zinc-900 text-white text-sm rounded-sm inline-flex items-center gap-1"><RefreshCw className="w-4 h-4" /> {s.kiosk_token ? "Generate Ulang" : "Generate"}</button>
         {s.kiosk_token && <button onClick={revoke} data-testid="revoke-kiosk"

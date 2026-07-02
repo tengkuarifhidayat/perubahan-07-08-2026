@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useBookingSocket } from "@/lib/ws";
-import { CalendarDays, LayoutList } from "lucide-react";
+import { CalendarDays, LayoutList, Pause, Play } from "lucide-react";
+
+// Asymmetric auto-cycle durations (ms)
+const CYCLE = { today: 60000, month: 30000 };
 
 function ymd(d) {
   const y = d.getFullYear();
@@ -13,14 +16,51 @@ function ymd(d) {
 function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function daysInMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
 
+// Slow automatic vertical scroll for overflowing content (TV displays)
+function useAutoScroll(enabled, dep) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!enabled) return;
+    const el = ref.current;
+    if (!el) return;
+    let raf;
+    let dir = 1;
+    let pos = 0;
+    let pauseUntil = Date.now() + 2500; // hold at top briefly before scrolling
+    const step = () => {
+      const max = el.scrollHeight - el.clientHeight;
+      if (max > 4) {
+        const t = Date.now();
+        if (t >= pauseUntil) {
+          pos += dir * 0.5; // ~30px/s — slow, readable
+          if (pos >= max) { pos = max; dir = -1; pauseUntil = t + 3000; }
+          else if (pos <= 0) { pos = 0; dir = 1; pauseUntil = t + 3000; }
+          el.scrollTop = pos;
+        }
+      } else {
+        pos = 0;
+        el.scrollTop = 0;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [enabled, dep]); // eslint-disable-line
+  return ref;
+}
+
 export default function KioskTV() {
   const [params] = useSearchParams();
   const token = params.get("token");
+  const modeParam = params.get("mode"); // 'auto' | 'static' | null(manual)
+  const isAuto = modeParam === "auto";
+  const isStatic = modeParam === "static";
   const [ok, setOk] = useState(null);
   const [now, setNow] = useState(new Date());
   const [bookings, setBookings] = useState([]);
   const [live, setLive] = useState(false);
-  const [mode, setMode] = useState("today"); // 'today' | 'month' — default 'today'
+  const [mode, setMode] = useState("today"); // 'today' | 'month'
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (!token) { setOk(false); return; }
@@ -31,6 +71,17 @@ export default function KioskTV() {
     const t = setInterval(() => setNow(new Date()), 1000 * 30);
     return () => clearInterval(t);
   }, []);
+
+  // static monitor always stays on 'Hari Ini'
+  useEffect(() => { if (isStatic) setMode("today"); }, [isStatic]);
+
+  // asymmetric auto-cycle (only for ?mode=auto and when not paused)
+  useEffect(() => {
+    if (!isAuto || paused) return;
+    const dur = CYCLE[mode] || CYCLE.today;
+    const t = setTimeout(() => setMode((m) => (m === "today" ? "month" : "today")), dur);
+    return () => clearTimeout(t);
+  }, [isAuto, paused, mode]);
 
   const cursor = startOfMonth(now);
   const load = async () => {
@@ -56,11 +107,10 @@ export default function KioskTV() {
   const totalDays = daysInMonth(cursor);
   const today = ymd(new Date());
   const monthName = cursor.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
-  const todayList = grouped[today] || [];
 
   return (
-    <div className="kiosk px-8 py-6">
-      <div className="flex items-center justify-between">
+    <div className="kiosk px-8 py-6 h-screen flex flex-col overflow-hidden" data-testid="kiosk-root" data-mode={isAuto ? "auto" : isStatic ? "static" : "manual"}>
+      <div className="flex items-center justify-between shrink-0">
         <div>
           <div className="text-2xl uppercase tracking-widest text-zinc-400">FH UNRI · Jadwal Ruangan Labor</div>
           <div className="font-display text-6xl mt-1 capitalize">{monthName}</div>
@@ -71,85 +121,123 @@ export default function KioskTV() {
           <div className="mt-2 inline-flex items-center gap-2 text-lg text-emerald-400">
             <span className="live-dot" style={{ background: live ? "#22c55e" : "#4ade80" }}></span> LIVE
           </div>
-          <div className="mt-4 inline-flex bg-zinc-900 border border-zinc-700 rounded-sm p-1" data-testid="kiosk-mode-toggle">
-            <button
-              data-testid="mode-today"
-              onClick={() => setMode("today")}
-              className={`px-4 py-2 text-lg font-bold inline-flex items-center gap-2 ${mode === "today" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
-            >
-              <LayoutList className="w-5 h-5" /> Hari Ini
-            </button>
-            <button
-              data-testid="mode-month"
-              onClick={() => setMode("month")}
-              className={`px-4 py-2 text-lg font-bold inline-flex items-center gap-2 ${mode === "month" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
-            >
-              <CalendarDays className="w-5 h-5" /> Bulanan
-            </button>
-          </div>
+
+          {!isStatic && (
+            <div className="mt-4 inline-flex items-center gap-2 justify-end">
+              <div className="inline-flex bg-zinc-900 border border-zinc-700 rounded-sm p-1" data-testid="kiosk-mode-toggle">
+                <button
+                  data-testid="mode-today"
+                  onClick={() => setMode("today")}
+                  className={`px-4 py-2 text-lg font-bold inline-flex items-center gap-2 ${mode === "today" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
+                >
+                  <LayoutList className="w-5 h-5" /> Hari Ini
+                </button>
+                <button
+                  data-testid="mode-month"
+                  onClick={() => setMode("month")}
+                  className={`px-4 py-2 text-lg font-bold inline-flex items-center gap-2 ${mode === "month" ? "bg-white text-zinc-900" : "text-zinc-400 hover:text-white"}`}
+                >
+                  <CalendarDays className="w-5 h-5" /> Bulanan
+                </button>
+              </div>
+              {isAuto && (
+                <button
+                  data-testid="kiosk-pause"
+                  onClick={() => setPaused((p) => !p)}
+                  className="px-4 py-2 text-lg font-bold inline-flex items-center gap-2 bg-zinc-900 border border-zinc-700 rounded-sm text-white hover:bg-zinc-800"
+                >
+                  {paused ? <><Play className="w-5 h-5" /> Lanjut</> : <><Pause className="w-5 h-5" /> Jeda</>}
+                </button>
+              )}
+            </div>
+          )}
+          {isAuto && (
+            <div className="mt-2 text-base text-zinc-500 uppercase tracking-widest" data-testid="kiosk-auto-badge">
+              Auto · {paused ? "Dijeda" : mode === "today" ? "Hari Ini 60 detik" : "Bulanan 30 detik"}
+            </div>
+          )}
         </div>
       </div>
 
-      {mode === "today" ? (
-        <TodayView now={now} grouped={grouped} />
-      ) : (
-        <MonthView cursor={cursor} grouped={grouped} today={today} firstWeekday={firstWeekday} totalDays={totalDays} />
-      )}
+      <div className="flex-1 min-h-0 mt-6">
+        {mode === "today" ? (
+          <TodayView now={now} grouped={grouped} autoScroll={isAuto || isStatic} />
+        ) : (
+          <MonthView cursor={cursor} grouped={grouped} today={today} firstWeekday={firstWeekday} totalDays={totalDays} />
+        )}
+      </div>
     </div>
   );
 }
 
-function TodayView({ now, grouped }) {
-  const todayKey = (() => { const d = now; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+function TodayView({ now, grouped, autoScroll }) {
+  const todayKey = ymd(now);
   const tmr = new Date(now); tmr.setDate(tmr.getDate() + 1);
-  const tmrKey = `${tmr.getFullYear()}-${String(tmr.getMonth()+1).padStart(2,"0")}-${String(tmr.getDate()).padStart(2,"0")}`;
+  const tmrKey = ymd(tmr);
   const todayList = grouped[todayKey] || [];
   const tmrList = grouped[tmrKey] || [];
 
-  return (
-    <div className="mt-6" data-testid="today-view">
-      <div className="uppercase tracking-widest text-2xl text-zinc-400 mb-3">Hari Ini</div>
-      {todayList.length === 0 ? (
-        <div className="text-4xl text-zinc-500 border-2 border-dashed border-zinc-800 p-12 text-center" data-testid="today-empty">
-          Tidak ada jadwal hari ini
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {todayList.map((b) => (
-            <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-6`}>
-              <div className="font-display text-6xl leading-none">{b.start_time}<span className="text-4xl text-zinc-400 mx-2">–</span>{b.end_time}</div>
-              <div className="text-3xl font-bold mt-3">{b.room_name}</div>
-              <div className="text-2xl mt-1 text-zinc-200">{b.nama} · Kelas {b.kelas}</div>
-              <div className="text-xl mt-1 text-zinc-300">{b.purpose}</div>
-              {b.status === "menunggu" && <div className="mt-2 inline-block bg-yellow-500/20 text-yellow-300 px-3 py-1 text-lg font-bold">MENUNGGU</div>}
-            </div>
-          ))}
-        </div>
-      )}
+  // Font scaling: shrink cards when there are many bookings to fit the screen
+  const n = todayList.length;
+  const density = n <= 4 ? "lg" : n <= 8 ? "md" : "sm";
+  const sc = {
+    lg: { time: "text-6xl", dash: "text-4xl", room: "text-3xl", name: "text-2xl", purpose: "text-xl", pad: "p-6", gap: "gap-4" },
+    md: { time: "text-5xl", dash: "text-3xl", room: "text-2xl", name: "text-xl", purpose: "text-lg", pad: "p-5", gap: "gap-3" },
+    sm: { time: "text-4xl", dash: "text-2xl", room: "text-xl", name: "text-lg", purpose: "text-base", pad: "p-4", gap: "gap-3" },
+  }[density];
 
-      <div className="uppercase tracking-widest text-xl text-zinc-400 mt-10 mb-3">Jadwal Besok</div>
-      {tmrList.length === 0 ? (
-        <div className="text-2xl text-zinc-500 border border-dashed border-zinc-800 p-6 text-center" data-testid="tomorrow-empty">
-          Tidak ada jadwal besok
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="tomorrow-list">
-          {tmrList.map((b) => (
-            <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-4 opacity-90`}>
-              <div className="font-display text-4xl">{b.start_time}–{b.end_time}</div>
-              <div className="text-xl font-bold mt-1">{b.room_name}</div>
-              <div className="text-lg text-zinc-200">{b.nama} · {b.kelas}</div>
-            </div>
-          ))}
-        </div>
-      )}
+  const scrollRef = useAutoScroll(autoScroll, n);
+
+  return (
+    <div className="h-full flex flex-col" data-testid="today-view">
+      <div className="uppercase tracking-widest text-2xl text-zinc-400 mb-3 shrink-0">Hari Ini</div>
+      <div
+        ref={scrollRef}
+        className="flex-1 min-h-0 overflow-hidden pr-2"
+        data-testid="today-scroll"
+      >
+        {todayList.length === 0 ? (
+          <div className="text-4xl text-zinc-500 border-2 border-dashed border-zinc-800 p-12 text-center" data-testid="today-empty">
+            Tidak ada jadwal hari ini
+          </div>
+        ) : (
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${sc.gap}`}>
+            {todayList.map((b) => (
+              <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} ${sc.pad}`}>
+                <div className={`font-display ${sc.time} leading-none`}>{b.start_time}<span className={`${sc.dash} text-zinc-400 mx-2`}>–</span>{b.end_time}</div>
+                <div className={`${sc.room} font-bold mt-3`}>{b.room_name}</div>
+                <div className={`${sc.name} mt-1 text-zinc-200`}>{b.nama} · Kelas {b.kelas}</div>
+                <div className={`${sc.purpose} mt-1 text-zinc-300`}>{b.purpose}</div>
+                {b.status === "menunggu" && <div className="mt-2 inline-block bg-yellow-500/20 text-yellow-300 px-3 py-1 text-lg font-bold">MENUNGGU</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="uppercase tracking-widest text-xl text-zinc-400 mt-10 mb-3">Jadwal Besok</div>
+        {tmrList.length === 0 ? (
+          <div className="text-2xl text-zinc-500 border border-dashed border-zinc-800 p-6 text-center" data-testid="tomorrow-empty">
+            Tidak ada jadwal besok
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="tomorrow-list">
+            {tmrList.map((b) => (
+              <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-4 opacity-90`}>
+                <div className="font-display text-4xl">{b.start_time}–{b.end_time}</div>
+                <div className="text-xl font-bold mt-1">{b.room_name}</div>
+                <div className="text-lg text-zinc-200">{b.nama} · {b.kelas}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 function MonthView({ cursor, grouped, today, firstWeekday, totalDays }) {
   return (
-    <div className="mt-6 grid grid-cols-12 gap-6" data-testid="month-view">
+    <div className="h-full grid grid-cols-12 gap-6" data-testid="month-view">
         <div className="col-span-8">
           <div className="grid grid-cols-7 text-lg font-bold text-zinc-500">
             {["Sen","Sel","Rab","Kam","Jum","Sab","Min"].map((d) => <div key={d} className="p-2 border-b border-zinc-800">{d}</div>)}
