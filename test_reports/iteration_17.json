@@ -1,0 +1,51 @@
+{
+  "summary": "Frontend regression + bug fix verification. All 5 review items verified passing on preview URL.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_details": {
+    "cek_status_icon_overlap_fix": {
+      "input_paddingLeft_px": 44,
+      "icon_right_x": 244.0,
+      "text_start_x": 258.0,
+      "overlap": false,
+      "verdict": "PASS - Search icon fully inside padding area, no overlap with placeholder"
+    },
+    "landing_simplified": {
+      "removed_texts_absent": ["Staf ... halaman terpisah", "Data pemesan bersifat self-input", "01/02/03"],
+      "kept_texts_present": ["FH UNRI · Sistem Pemesanan Labor", "Portal Staf", "Cara Melacak Pengajuan"],
+      "ctas_present": ["cta-pesan", "cta-cek-status", "staff-login-link"],
+      "footer_only_copyright": true,
+      "verdict": "PASS"
+    },
+    "pesan_form": {
+      "top_paragraph": "Isi data lengkap. Pengajuan akan diverifikasi oleh Kepala Labor. (no self-input)",
+      "data_valid_note_text": "Isi data yang benar. Pengajuan dengan data tidak valid dapat ditolak Kepala Labor.",
+      "ketentuan_accordion_contains_self_input": true,
+      "booking_submit_success_code": "LAB-2026-0092",
+      "verdict": "PASS"
+    },
+    "conflict_message_no_em_dash": {
+      "text": "Slot ini sedang menunggu persetujuan mahasiswa lain. Slot bisa terbuka kembali jika pengajuan tersebut ditolak. Coba cek lagi nanti, atau pilih slot alternatif di bawah ini.",
+      "has_em_dash": false,
+      "matches_expected_phrase": true,
+      "verdict": "PASS"
+    },
+    "regression": {
+      "admin_login_redirects_to_dasbor_admin": true,
+      "mobile_375_overflow_px": {"/": 0, "/pesan": 0, "/cek-status": 0},
+      "verdict": "PASS"
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py exceeds 1100 lines — recommend splitting into modules (auth/, bookings/, exports/, ws/, settings/) in a future refactor.",
+    "Layer 2 rejection message (line ~636/707) uses en/em dash for time range formatting ('10:00–12:00'). This is intentional/typographic and not part of the current bug fix scope."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only requested)", "frontend": "100%"},
+  "seed_data_creation": "Created 1 booking (LAB-2026-0092) on 2026-07-10 10:00–11:00 in Labor 1 to trigger conflict test. Can be cleaned by admin.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 17: all 5 review items (icon overlap fix in CekStatus, Landing simplification, PesanRuangan data-valid-note + accordion, conflict message without em dash, regression admin login + mobile 375) verified passing on preview URL. Created booking LAB-2026-0092 as test seed. No issues found."
+}

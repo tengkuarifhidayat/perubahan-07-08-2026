@@ -142,7 +142,6 @@ export default function PesanRuangan() {
         )}
         <p className="text-secondary-ox mt-5 text-sm max-w-2xl leading-relaxed">
           Isi data lengkap. Pengajuan akan diverifikasi oleh Kepala Labor.
-          Data mahasiswa bersifat self-input dan bukan verifikasi identitas resmi.
         </p>
 
         <form onSubmit={submit} className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8" data-testid="booking-form">
@@ -151,6 +150,9 @@ export default function PesanRuangan() {
               <input required data-testid="input-nim" value={form.nim}
                 onChange={(e) => setForm({ ...form, nim: e.target.value.replace(/\D/g, "") })}
                 className="input-ox" placeholder="Masukkan NIM (angka)" />
+              <p className="text-xs text-secondary-ox mt-1.5" data-testid="data-valid-note">
+                Isi data yang benar. Pengajuan dengan data tidak valid dapat ditolak Kepala Labor.
+              </p>
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Field label="Nama Lengkap" required>
@@ -242,6 +244,7 @@ export default function PesanRuangan() {
                 <li>• NIM yang sudah pernah dipakai akan otomatis melengkapi Nama & Kelas.</li>
                 <li>• Setelah submit, Anda menerima Kode Booking untuk memantau status.</li>
                 <li>• Pembatalan bisa dilakukan sendiri di halaman Cek Status.</li>
+                <li>• Data mahasiswa bersifat self-input dan bukan verifikasi identitas resmi.</li>
               </ul>
             </details>
 

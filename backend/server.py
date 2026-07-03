@@ -538,8 +538,8 @@ async def create_booking(body: BookingCreate, request: Request):
             msg = "Jadwal bentrok dengan pengajuan yang sudah disetujui"
         else:
             msg = ("Slot ini sedang menunggu persetujuan mahasiswa lain. "
-                   "Slot bisa terbuka kembali jika pengajuan tersebut ditolak — "
-                   "coba cek lagi nanti, atau pilih slot alternatif di bawah ini.")
+                   "Slot bisa terbuka kembali jika pengajuan tersebut ditolak. "
+                   "Coba cek lagi nanti, atau pilih slot alternatif di bawah ini.")
         raise HTTPException(409, json.dumps({
             "message": msg,
             "conflicts": [{"code": c["code"], "start": c["start_time"], "end": c["end_time"], "status": c["status"]} for c in conflicts],
@@ -749,8 +749,8 @@ async def edit_booking_public(code: str, body: BookingEdit):
             msg = "Jadwal bentrok dengan pengajuan yang sudah disetujui"
         else:
             msg = ("Slot ini sedang menunggu persetujuan mahasiswa lain. "
-                   "Slot bisa terbuka kembali jika pengajuan tersebut ditolak — "
-                   "coba cek lagi nanti, atau pilih slot lain.")
+                   "Slot bisa terbuka kembali jika pengajuan tersebut ditolak. "
+                   "Coba cek lagi nanti, atau pilih slot lain.")
         raise HTTPException(409, json.dumps({"message": msg}))
     room = await db.rooms.find_one({"_id": new_room})
     if not room: raise HTTPException(400, "Ruangan tidak valid")
@@ -967,7 +967,7 @@ async def export_pdf(
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4))
     styles = getSampleStyleSheet()
-    story = [Paragraph("Laporan Pemesanan Ruangan Laboratorium — FH UNRI", styles["Title"]), Spacer(1, 12)]
+    story = [Paragraph("Laporan Pemesanan Ruangan Laboratorium · FH UNRI", styles["Title"]), Spacer(1, 12)]
     data = [["Kode", "Tanggal", "Jam", "Ruangan", "Nama", "NIM", "Kelas", "Keperluan", "Status"]]
     for r in rows:
         data.append([r["code"], r["date"], f"{r['start_time']}–{r['end_time']}",

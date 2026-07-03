@@ -61,7 +61,8 @@ export default function CekStatus() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Contoh: LAB-2026-0042 atau NIM 2010101010"
-              className="input-ox pl-11"
+              className="input-ox"
+              style={{ paddingLeft: "2.75rem" }}
             />
           </div>
           <button data-testid="check-submit" className="btn-oxblood px-8 py-3 whitespace-nowrap">

@@ -331,18 +331,18 @@ function KioskTab() {
   const copy = (u) => { navigator.clipboard.writeText(u); toast.success("Link disalin"); };
   return (
     <div className="bg-white border border-zinc-200 rounded-sm p-6 max-w-2xl">
-      <div className="font-heading">Display TV — Token Read-Only</div>
+      <div className="font-heading">Display TV · Token Read-Only</div>
       <p className="text-sm text-zinc-600 mt-2">Gunakan link di bawah pada layar TV. Hanya menampilkan jadwal, tidak ada aksi apapun. Aman meski link diketahui orang lain. Kedua link memakai token yang sama.</p>
       {base ? (
         <div className="mt-4 space-y-4">
           <div data-testid="kiosk-url-auto-block">
-            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">TV Publik (Auto — bergantian Hari Ini 60s / Bulanan 30s)</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">TV Publik (Auto, bergantian Hari Ini 60s / Bulanan 30s)</div>
             <div className="mt-1 p-3 bg-zinc-50 border border-zinc-200 rounded-sm font-mono text-xs break-all" data-testid="kiosk-url-auto">{autoUrl}</div>
             <button onClick={() => copy(autoUrl)} data-testid="copy-kiosk-url-auto"
               className="mt-2 px-3 py-1.5 border border-zinc-300 text-sm rounded-sm inline-flex items-center gap-1"><Copy className="w-4 h-4" /> Salin Link Auto</button>
           </div>
           <div data-testid="kiosk-url-static-block">
-            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">Monitor TU (Statis — selalu Hari Ini)</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">Monitor TU (Statis, selalu Hari Ini)</div>
             <div className="mt-1 p-3 bg-zinc-50 border border-zinc-200 rounded-sm font-mono text-xs break-all" data-testid="kiosk-url-static">{staticUrl}</div>
             <button onClick={() => copy(staticUrl)} data-testid="copy-kiosk-url-static"
               className="mt-2 px-3 py-1.5 border border-zinc-300 text-sm rounded-sm inline-flex items-center gap-1"><Copy className="w-4 h-4" /> Salin Link Statis</button>
