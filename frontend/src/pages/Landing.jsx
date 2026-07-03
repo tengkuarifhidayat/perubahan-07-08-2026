@@ -17,10 +17,10 @@ export default function Landing() {
         </Link>
       </header>
 
-      <main className="flex-1 w-full max-w-[1200px] mx-auto px-6 py-16 sm:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <main className="w-full max-w-[1200px] mx-auto px-6 pt-10 sm:pt-16 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
         <div className="lg:col-span-6">
-          <div className="label-eyebrow mb-5">Fakultas Hukum · Universitas Riau</div>
-          <span className="title-accent mb-8" />
+          <span className="title-accent mb-4" />
+          <div className="label-eyebrow mb-6" data-testid="landing-info-line">2 Ruangan · Labor 1 &amp; Labor 2</div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               to="/pesan"
@@ -50,7 +50,7 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer className="border-t border-black/5 py-6">
+      <footer className="mt-auto border-t border-black/5 py-6">
         <div className="max-w-[1200px] mx-auto px-6 text-xs text-secondary-ox">
           <span>© {new Date().getFullYear()} Fakultas Hukum UNRI</span>
         </div>
