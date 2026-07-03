@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { formatApiError } from "@/lib/api";
 import { toast } from "sonner";
-import { LogIn, ArrowLeft } from "lucide-react";
+import { LogIn, ArrowLeft, Scale } from "lucide-react";
 
 export default function StaffLogin() {
   const { login } = useAuth();
@@ -26,44 +26,50 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      <div className="hidden lg:block relative bg-zinc-900">
-        <div className="absolute inset-0 p-16 text-white flex flex-col justify-between">
-          <div className="label-eyebrow text-white/60">FAKULTAS HUKUM · UNRI</div>
-          <div>
-            <h2 className="font-display text-4xl leading-tight">Panel Staff</h2>
-            <p className="text-white/70 mt-3 max-w-sm">Persetujuan pengajuan, kalender jadwal, dan manajemen pengguna.</p>
-          </div>
+    <div className="civic min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <div className="hidden lg:flex relative flex-col justify-between p-16" style={{ background: "var(--text-primary)" }}>
+        <div className="flex items-center gap-2.5 text-white/70">
+          <Scale className="w-5 h-5" />
+          <span className="label-eyebrow" style={{ color: "rgba(255,255,255,0.6)" }}>Fakultas Hukum · UNRI</span>
+        </div>
+        <div>
+          <span className="title-accent mb-6" />
+          <h2 className="font-display text-4xl leading-tight text-white">Panel Staf</h2>
+          <p className="text-white/60 mt-4 max-w-sm leading-relaxed">
+            Persetujuan pengajuan, kalender jadwal, dan manajemen pengguna.
+          </p>
         </div>
       </div>
-      <div className="flex items-center justify-center p-8 bg-zinc-50">
+
+      <div className="flex items-center justify-center p-8 sm:p-12">
         <div className="w-full max-w-sm">
-          <Link to="/" className="text-sm text-zinc-600 inline-flex items-center gap-1 mb-8">
+          <Link to="/" className="text-sm text-secondary-ox inline-flex items-center gap-1 mb-10 hover:text-oxblood transition-colors">
             <ArrowLeft className="w-4 h-4" /> Kembali
           </Link>
-          <div className="label-eyebrow">MASUK</div>
-          <h1 className="font-display text-3xl mt-1">Staff Login</h1>
-          <p className="text-zinc-500 text-sm mt-1">Kepala Labor · Tata Usaha · Admin</p>
-          <form onSubmit={submit} className="mt-8 space-y-4" data-testid="login-form">
+          <div className="label-eyebrow">Masuk</div>
+          <h1 className="font-display text-3xl mt-1.5">Portal Staf</h1>
+          <span className="title-accent mt-4" />
+          <p className="text-secondary-ox text-sm mt-4">Kepala Labor · Tata Usaha · Admin</p>
+
+          <form onSubmit={submit} className="mt-10 space-y-5" data-testid="login-form">
             <div>
-              <label className="label-eyebrow block mb-1">Email</label>
+              <label className="label-ox block mb-1.5">Email</label>
               <input required type="email" data-testid="login-email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input" autoFocus />
+                className="input-ox" autoFocus />
             </div>
             <div>
-              <label className="label-eyebrow block mb-1">Password</label>
+              <label className="label-ox block mb-1.5">Password</label>
               <input required type="password" data-testid="login-password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input" />
+                className="input-ox" />
             </div>
             <button disabled={loading} data-testid="login-submit"
-              className="w-full py-3 bg-zinc-900 text-white rounded-sm font-semibold hover:bg-zinc-800 disabled:opacity-50 inline-flex items-center justify-center gap-2">
+              className="btn-oxblood w-full py-3 inline-flex items-center justify-center gap-2">
               <LogIn className="w-4 h-4" /> {loading ? "Memproses..." : "Masuk"}
             </button>
           </form>
         </div>
-        <style>{`.input { width:100%; padding:0.65rem 0.8rem; border:1px solid #e4e4e7; border-radius:0.125rem; font-size:0.9rem; background:white; } .input:focus { outline:none; border-color:#09090b; box-shadow:0 0 0 1px #09090b; }`}</style>
       </div>
     </div>
   );

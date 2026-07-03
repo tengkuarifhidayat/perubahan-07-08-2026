@@ -1,0 +1,24 @@
+{
+  "summary": "Post-redesign functional regression verified via Playwright on public URL. All 6 requested scenarios PASSED: (1) Landing CTAs cta-pesan→/pesan, cta-cek-status→/cek-status, staff-login-link→/masuk. (2) Login staf admin@fh.unri.ac.id / 8DUJnYecw& redirects to /dasbor/admin. (3) Form /pesan — ketentuan-accordion toggles open/close; submit valid booking (2010101099, weekday 2026-07-10, 08:00-10:00, captcha) produced booking-success with code LAB-2026-0091. (4) Bentrok: second submit with NIM different on same slot → conflict-info shown, booking-success NOT shown (409). (5) /cek-status search by code returns 1 card with edit-<code> & cancel-<code> buttons; edit modal opens correctly. (6) Mobile 375px: no horizontal overflow on all 4 pages. No functional regression detected after visual redesign.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PesanRuangan.jsx (~290 lines) — clean, hooks correct, captcha regenerated on error path.",
+    "CekStatus.jsx uses global window.confirm() for cancel — acceptable for MVP but could be replaced with in-app modal for consistent oxblood UX.",
+    "Non-blocking: WebSocket /api/ws still emits 401 on public pages (kiosk & mahasiswa) since no auth cookie present. Same as iteration_15 note. Consider gating useBookingSocket by auth state to keep console clean."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not tested per request)", "frontend": "100% (13/13 checks passed)"},
+  "test_credentials": "admin@fh.unri.ac.id / 8DUJnYecw& (verified). Booking created during test: LAB-2026-0091 (2010101099, 2026-07-10 08:00-10:00).",
+  "seed_data_creation": "1 booking LAB-2026-0091 created (status: menunggu). Safe to leave or cancel via admin dashboard.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Redesign visual pass tanpa regresi. All public data-testid intact. Admin dashboard tabs unchanged. Future weekday used: 2026-07-10 (Friday). CAPTCHA = a+b visible in <span> in /pesan form.",
+  "rca of the issue": "N/A — no bugs found"
+}
