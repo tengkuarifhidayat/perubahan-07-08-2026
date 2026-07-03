@@ -57,7 +57,8 @@ Web-based booking system for 2 lab rooms (Labor 1 & Labor 2) at Fakultas Hukum, 
 
 ### P1
 - ✅ Kiosk TV auto-cycle (Hari Ini 60s / Bulanan 30s), Pause/Resume, auto-scroll + font scaling, dual URL ?mode=auto|static — DONE Jul 2026 (verified iteration_15)
-- Replace hero/illustration assets (login hero shows Telkom Univ building — needs neutral law/courtroom vector) — SEPARATE task, pending
+- ✅ Visual redesign 4 halaman publik (Landing, Login Staf, Form Pengajuan, Cek Status) — palet oxblood #6E1F30, Fraunces+Inter, token CSS terpusat via `.civic`, accordion Ketentuan, "Portal Staf" — DONE Jul 2026 (verified iteration_16, 0 regresi)
+- ✅ ADMIN_PASSWORD dipindah ke env + seed idempoten — DONE Jul 2026
 - Email/WhatsApp notification for status changes to students (opt-in via contact field)
 - Notifications bell UI for staff (backend endpoint exists)
 - PWA manifest + service worker for "install to homescreen"
