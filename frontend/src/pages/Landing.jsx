@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CalendarCheck, Search, LogIn, Building2 } from "lucide-react";
+import { CalendarCheck, Search, LogIn, Building2, BookOpen, Download } from "lucide-react";
 
 export default function Landing() {
   return (
@@ -20,7 +20,7 @@ export default function Landing() {
       <main className="w-full max-w-[1200px] mx-auto px-6 pt-10 sm:pt-16 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
         <div className="lg:col-span-6">
           <span className="title-accent mb-4" />
-          <div className="label-eyebrow mb-6" data-testid="landing-info-line">2 Ruangan · Labor 1 &amp; Labor 2</div>
+          <div className="label-eyebrow mb-6" data-testid="landing-info-line">3 Ruangan · Labor 1, Labor 2 &amp; Labor 3</div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               to="/pesan"
@@ -34,6 +34,23 @@ export default function Landing() {
               className="btn-outline-ox inline-flex items-center justify-center gap-2 px-6 py-4 text-base">
               <Search className="w-5 h-5" /> Cek Status Pengajuan
             </Link>
+          </div>
+
+          <div className="mt-10 card-ox p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between" data-testid="pedoman-section">
+            <div className="flex items-start gap-3">
+              <BookOpen className="w-6 h-6 text-oxblood shrink-0 mt-0.5" />
+              <div>
+                <div className="font-heading text-lg">Buku Pedoman Praktik Peradilan Semu</div>
+                <p className="text-sm text-secondary-ox mt-1">Panduan pelaksanaan praktik peradilan semu di lingkungan Fakultas Hukum.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled
+              data-testid="pedoman-download-btn"
+              className="btn-ghost-ox text-sm px-4 py-2.5 inline-flex items-center gap-2 opacity-60 cursor-not-allowed whitespace-nowrap">
+              <Download className="w-4 h-4" /> Segera Hadir
+            </button>
           </div>
         </div>
 

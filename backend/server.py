@@ -186,6 +186,7 @@ async def startup():
         await db.rooms.insert_many([
             {"_id": "labor-1", "name": "Labor 1", "active": True, "order": 1},
             {"_id": "labor-2", "name": "Labor 2", "active": True, "order": 2},
+            {"_id": "labor-3", "name": "Labor 3", "active": True, "order": 3},
         ])
         logger.info("Rooms seeded")
 
