@@ -170,6 +170,42 @@ export default function KioskTV() {
   );
 }
 
+function roomAccent(roomId) {
+  if (roomId === "labor-1") return "#38BDF8";
+  if (roomId === "labor-2") return "#A855F7";
+  // deterministic fallback color for future rooms (labor-3, dst.)
+  const palette = ["#34D399", "#FBBF24", "#F472B6", "#22D3EE", "#F87171"];
+  let h = 0;
+  for (const c of String(roomId)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return palette[h % palette.length];
+}
+
+function StatusBadge({ status, size }) {
+  const cls = status === "disetujui"
+    ? "bg-emerald-400 text-black"
+    : "bg-amber-400 text-black";
+  const label = status === "disetujui" ? "DISETUJUI" : "MENUNGGU";
+  return (
+    <span className={`inline-block font-bold tracking-wider ${cls} ${size} px-3 py-1 rounded-sm`} data-testid={`status-${status}`}>
+      {label}
+    </span>
+  );
+}
+
+function BoardRow({ b, rowText, badgeSize }) {
+  return (
+    <div className="grid grid-cols-[1.3fr_1.4fr_2.2fr_1.1fr] items-center gap-4 py-3.5 border-b border-zinc-800/80" data-testid={`board-row-${b.code}`}>
+      <div className={`flex items-center gap-3 font-bold text-white ${rowText}`}>
+        <span className="inline-block w-1.5 self-stretch rounded" style={{ background: roomAccent(b.room_id), minHeight: "1.6em" }} />
+        <span className="truncate">{b.room_name}</span>
+      </div>
+      <div className={`text-amber-300 tabular-nums ${rowText}`}>{b.start_time}<span className="text-zinc-500 mx-1.5">–</span>{b.end_time}</div>
+      <div className={`text-zinc-100 truncate ${rowText}`}>{b.nama} <span className="text-zinc-500">({b.kelas})</span></div>
+      <div><StatusBadge status={b.status} size={badgeSize} /></div>
+    </div>
+  );
+}
+
 function TodayView({ now, grouped, autoScroll }) {
   const todayKey = ymd(now);
   const tmr = new Date(now); tmr.setDate(tmr.getDate() + 1);
@@ -177,63 +213,55 @@ function TodayView({ now, grouped, autoScroll }) {
   const todayList = grouped[todayKey] || [];
   const tmrList = grouped[tmrKey] || [];
 
-  // Font scaling: shrink cards when there are many bookings to fit the screen
+  // Font scaling for legibility from ~2m — shrinks as rows grow so all fit.
   const n = todayList.length;
-  const density = n <= 4 ? "lg" : n <= 8 ? "md" : "sm";
-  const sc = {
-    lg: { time: "text-6xl", dash: "text-4xl", room: "text-3xl", name: "text-2xl", purpose: "text-xl", pad: "p-6", gap: "gap-4" },
-    md: { time: "text-5xl", dash: "text-3xl", room: "text-2xl", name: "text-xl", purpose: "text-lg", pad: "p-5", gap: "gap-3" },
-    sm: { time: "text-4xl", dash: "text-2xl", room: "text-xl", name: "text-lg", purpose: "text-base", pad: "p-4", gap: "gap-3" },
-  }[density];
+  const density = n <= 5 ? "lg" : n <= 9 ? "md" : "sm";
+  const rowText = { lg: "text-3xl", md: "text-2xl", sm: "text-xl" }[density];
+  const badgeSize = { lg: "text-xl", md: "text-lg", sm: "text-base" }[density];
+  const headText = { lg: "text-xl", md: "text-lg", sm: "text-base" }[density];
 
   const scrollRef = useAutoScroll(autoScroll, n);
 
   return (
-    <div className="h-full flex flex-col" data-testid="today-view">
-      <div className="uppercase tracking-widest text-2xl text-zinc-400 mb-3 shrink-0">Hari Ini</div>
-      <div
-        ref={scrollRef}
-        className="flex-1 min-h-0 overflow-hidden pr-2"
-        data-testid="today-scroll"
-      >
+    <div className="h-full flex flex-col font-mono" data-testid="today-view">
+      <div className="uppercase tracking-[0.25em] text-2xl text-amber-300 mb-4 shrink-0">Jadwal Hari Ini</div>
+
+      {/* Board column header */}
+      <div className="grid grid-cols-[1.3fr_1.4fr_2.2fr_1.1fr] gap-4 pb-2.5 border-b-2 border-amber-400/70 shrink-0 uppercase tracking-widest text-zinc-400" data-testid="board-header">
+        <div className={headText}>Ruangan</div>
+        <div className={headText}>Jam</div>
+        <div className={headText}>Pemesan (Kelas)</div>
+        <div className={headText}>Status</div>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-hidden" data-testid="today-scroll">
         {todayList.length === 0 ? (
-          <div className="text-4xl text-zinc-500 border-2 border-dashed border-zinc-800 p-12 text-center" data-testid="today-empty">
+          <div className="text-3xl text-zinc-500 border-2 border-dashed border-zinc-800 p-12 text-center mt-4" data-testid="today-empty">
             Tidak ada jadwal hari ini
           </div>
         ) : (
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${sc.gap}`}>
+          <div>
             {todayList.map((b) => (
-              <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} ${sc.pad}`}>
-                <div className={`font-display ${sc.time} leading-none`}>{b.start_time}<span className={`${sc.dash} text-zinc-400 mx-2`}>–</span>{b.end_time}</div>
-                <div className={`${sc.room} font-bold mt-3`}>{b.room_name}</div>
-                <div className={`${sc.name} mt-1 text-zinc-200`}>{b.nama} · Kelas {b.kelas}</div>
-                <div className={`${sc.purpose} mt-1 text-zinc-300`}>{b.purpose}</div>
-                {b.status === "menunggu" && <div className="mt-2 inline-block bg-yellow-500/20 text-yellow-300 px-3 py-1 text-lg font-bold">MENUNGGU</div>}
-              </div>
+              <BoardRow key={b.id} b={b} rowText={rowText} badgeSize={badgeSize} />
             ))}
           </div>
         )}
 
-        <div className="uppercase tracking-widest text-xl text-zinc-400 mt-10 mb-3">Jadwal Besok</div>
-        {tmrList.length === 0 ? (
-          <div className="text-2xl text-zinc-500 border border-dashed border-zinc-800 p-6 text-center" data-testid="tomorrow-empty">
-            Tidak ada jadwal besok
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3" data-testid="tomorrow-list">
-            {tmrList.map((b) => (
-              <div key={b.id} className={`${b.room_id === "labor-2" ? "room-labor-2" : "room-labor-1"} p-4 opacity-90`}>
-                <div className="font-display text-4xl">{b.start_time}–{b.end_time}</div>
-                <div className="text-xl font-bold mt-1">{b.room_name}</div>
-                <div className="text-lg text-zinc-200">{b.nama} · {b.kelas}</div>
-              </div>
-            ))}
-          </div>
+        {tmrList.length > 0 && (
+          <>
+            <div className="uppercase tracking-[0.25em] text-lg text-zinc-500 mt-10 mb-3">Jadwal Besok</div>
+            <div className="opacity-75">
+              {tmrList.map((b) => (
+                <BoardRow key={b.id} b={b} rowText="text-xl" badgeSize="text-sm" />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
+
 
 function MonthView({ cursor, grouped, today, firstWeekday, totalDays }) {
   return (
