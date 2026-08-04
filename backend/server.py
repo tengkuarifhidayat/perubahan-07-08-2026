@@ -300,6 +300,10 @@ class MahasiswaUpdate(BaseModel):
 
 @api.patch("/mahasiswa/{nim}")
 async def update_mahasiswa(nim: str, body: MahasiswaUpdate, user: dict = Depends(require_role("admin"))):
+    kelas_norm = (body.kelas or "").strip().upper()
+    if not re.fullmatch(r"[A-Z]", kelas_norm):
+        raise HTTPException(400, "Kelas harus berupa 1 huruf (A-Z)")
+    body.kelas = kelas_norm
     await db.mahasiswa_cache.update_one(
         {"nim": nim},
         {"$set": {"nim": body.nim, "nama": body.nama, "kelas": body.kelas, "updated_at": now_utc()}},
@@ -497,6 +501,12 @@ async def create_booking(body: BookingCreate, request: Request):
     # NIM validation
     if not re.match(s["nim_regex"], body.nim):
         raise HTTPException(400, "Format NIM tidak valid")
+
+    # Kelas validation: exactly 1 letter A-Z, auto-uppercase
+    kelas_norm = (body.kelas or "").strip().upper()
+    if not re.fullmatch(r"[A-Z]", kelas_norm):
+        raise HTTPException(400, "Kelas harus berupa 1 huruf (A-Z)")
+    body.kelas = kelas_norm
 
     # rate limit by real client IP (behind ingress → use X-Forwarded-For)
     ip = get_client_ip(request)

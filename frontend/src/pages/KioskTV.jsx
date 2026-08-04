@@ -96,7 +96,8 @@ export default function KioskTV() {
 
   const grouped = useMemo(() => {
     const m = {};
-    for (const b of bookings) (m[b.date] = m[b.date] || []).push(b);
+    // Kiosk shows ONLY approved bookings
+    for (const b of bookings) if (b.status === "disetujui") (m[b.date] = m[b.date] || []).push(b);
     return m;
   }, [bookings]);
 
@@ -180,28 +181,16 @@ function roomAccent(roomId) {
   return palette[h % palette.length];
 }
 
-function StatusBadge({ status, size }) {
-  const cls = status === "disetujui"
-    ? "bg-emerald-400 text-black"
-    : "bg-amber-400 text-black";
-  const label = status === "disetujui" ? "DISETUJUI" : "MENUNGGU";
+function BoardRow({ b, rowText }) {
   return (
-    <span className={`inline-block font-bold tracking-wider ${cls} ${size} px-3 py-1 rounded-sm`} data-testid={`status-${status}`}>
-      {label}
-    </span>
-  );
-}
-
-function BoardRow({ b, rowText, badgeSize }) {
-  return (
-    <div className="grid grid-cols-[1.3fr_1.4fr_2.2fr_1.1fr] items-center gap-4 py-3.5 border-b border-zinc-800/80" data-testid={`board-row-${b.code}`}>
+    <div className="grid grid-cols-[1.4fr_1.5fr_2.2fr_0.8fr] items-center gap-4 py-3.5 border-b border-zinc-800/80" data-testid={`board-row-${b.code}`}>
       <div className={`flex items-center gap-3 font-bold text-white ${rowText}`}>
         <span className="inline-block w-1.5 self-stretch rounded" style={{ background: roomAccent(b.room_id), minHeight: "1.6em" }} />
         <span className="truncate">{b.room_name}</span>
       </div>
       <div className={`text-amber-300 tabular-nums ${rowText}`}>{b.start_time}<span className="text-zinc-500 mx-1.5">–</span>{b.end_time}</div>
-      <div className={`text-zinc-100 truncate ${rowText}`}>{b.nama} <span className="text-zinc-500">({b.kelas})</span></div>
-      <div><StatusBadge status={b.status} size={badgeSize} /></div>
+      <div className={`text-zinc-100 truncate ${rowText}`}>{b.nama}</div>
+      <div className={`text-zinc-300 ${rowText}`}>{b.kelas}</div>
     </div>
   );
 }
@@ -217,7 +206,6 @@ function TodayView({ now, grouped, autoScroll }) {
   const n = todayList.length;
   const density = n <= 5 ? "lg" : n <= 9 ? "md" : "sm";
   const rowText = { lg: "text-3xl", md: "text-2xl", sm: "text-xl" }[density];
-  const badgeSize = { lg: "text-xl", md: "text-lg", sm: "text-base" }[density];
   const headText = { lg: "text-xl", md: "text-lg", sm: "text-base" }[density];
 
   const scrollRef = useAutoScroll(autoScroll, n);
@@ -227,11 +215,11 @@ function TodayView({ now, grouped, autoScroll }) {
       <div className="uppercase tracking-[0.25em] text-2xl text-amber-300 mb-4 shrink-0">Jadwal Hari Ini</div>
 
       {/* Board column header */}
-      <div className="grid grid-cols-[1.3fr_1.4fr_2.2fr_1.1fr] gap-4 pb-2.5 border-b-2 border-amber-400/70 shrink-0 uppercase tracking-widest text-zinc-400" data-testid="board-header">
+      <div className="grid grid-cols-[1.4fr_1.5fr_2.2fr_0.8fr] gap-4 pb-2.5 border-b-2 border-amber-400/70 shrink-0 uppercase tracking-widest text-zinc-400" data-testid="board-header">
         <div className={headText}>Ruangan</div>
         <div className={headText}>Jam</div>
-        <div className={headText}>Pemesan (Kelas)</div>
-        <div className={headText}>Status</div>
+        <div className={headText}>Nama</div>
+        <div className={headText}>Kelas</div>
       </div>
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-hidden" data-testid="today-scroll">
@@ -242,7 +230,7 @@ function TodayView({ now, grouped, autoScroll }) {
         ) : (
           <div>
             {todayList.map((b) => (
-              <BoardRow key={b.id} b={b} rowText={rowText} badgeSize={badgeSize} />
+              <BoardRow key={b.id} b={b} rowText={rowText} />
             ))}
           </div>
         )}
@@ -252,7 +240,7 @@ function TodayView({ now, grouped, autoScroll }) {
             <div className="uppercase tracking-[0.25em] text-lg text-zinc-500 mt-10 mb-3">Jadwal Besok</div>
             <div className="opacity-75">
               {tmrList.map((b) => (
-                <BoardRow key={b.id} b={b} rowText="text-xl" badgeSize="text-sm" />
+                <BoardRow key={b.id} b={b} rowText="text-xl" />
               ))}
             </div>
           </>

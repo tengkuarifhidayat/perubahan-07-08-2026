@@ -162,8 +162,8 @@ export default function PesanRuangan() {
               </Field>
               <Field label="Kelas" required>
                 <input required data-testid="input-kelas" value={form.kelas}
-                  onChange={(e) => setForm({ ...form, kelas: e.target.value.toUpperCase() })}
-                  className="input-ox" placeholder="Contoh: 4A" />
+                  onChange={(e) => setForm({ ...form, kelas: e.target.value.replace(/[^a-zA-Z]/g, "").slice(0, 1).toUpperCase() })}
+                  maxLength={1} className="input-ox" placeholder="Contoh: A" />
               </Field>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
