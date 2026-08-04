@@ -16,6 +16,7 @@ import KioskTV from "@/pages/KioskTV";
 const ROLES_KEPALA_LABOR = ["kepala_labor", "admin"];
 const ROLES_TU = ["tata_usaha", "admin"];
 const ROLES_ADMIN = ["admin"];
+const ROLES_REPORT = ["kepala_labor", "tata_usaha", "admin"];
 
 function Protected({ roles, children }) {
   const { user, loading } = useAuth();
@@ -44,7 +45,7 @@ export default function App() {
           <Route path="/dasbor/admin" element={
             <Protected roles={ROLES_ADMIN}><AdminDashboard /></Protected>} />
           <Route path="/laporan" element={
-            <Protected roles={ROLES_TU}><Laporan /></Protected>} />
+            <Protected roles={ROLES_REPORT}><Laporan /></Protected>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -940,7 +940,7 @@ async def export_excel(
     status: Optional[str] = None, room_id: Optional[str] = None,
     date_from: Optional[str] = None, date_to: Optional[str] = None,
     kelas: Optional[str] = None,
-    user: dict = Depends(require_role("tata_usaha", "admin")),
+    user: dict = Depends(require_role("tata_usaha", "admin", "kepala_labor")),
 ):
     rows = await _filtered_bookings(status, room_id, date_from, date_to, kelas)
     wb = Workbook()
@@ -961,7 +961,7 @@ async def export_pdf(
     status: Optional[str] = None, room_id: Optional[str] = None,
     date_from: Optional[str] = None, date_to: Optional[str] = None,
     kelas: Optional[str] = None,
-    user: dict = Depends(require_role("tata_usaha", "admin")),
+    user: dict = Depends(require_role("tata_usaha", "admin", "kepala_labor")),
 ):
     rows = await _filtered_bookings(status, room_id, date_from, date_to, kelas)
     buf = io.BytesIO()
