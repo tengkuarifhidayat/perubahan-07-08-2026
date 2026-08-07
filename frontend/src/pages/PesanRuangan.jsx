@@ -239,13 +239,23 @@ export default function PesanRuangan() {
                 <span className="label-ox text-oxblood">Ketentuan Pengajuan</span>
                 <ChevronDown className="accordion-chevron w-4 h-4 text-oxblood" />
               </summary>
-              <ul className="px-5 pb-5 text-sm text-secondary-ox space-y-2.5 leading-relaxed border-t border-black/5 pt-4">
-                <li>• Sistem akan menolak submit jika jadwal bentrok dengan pengajuan lain yang <b>sudah disetujui</b> maupun yang <b>masih menunggu</b> persetujuan.</li>
-                <li>• NIM yang sudah pernah dipakai akan otomatis melengkapi Nama & Kelas.</li>
-                <li>• Setelah submit, Anda menerima Kode Booking untuk memantau status.</li>
-                <li>• Pembatalan bisa dilakukan sendiri di halaman Cek Status.</li>
-                <li>• Data mahasiswa bersifat self-input dan bukan verifikasi identitas resmi.</li>
-              </ul>
+              <div className="px-5 pb-5 text-sm text-secondary-ox leading-relaxed border-t border-black/5 pt-4">
+                <p className="mb-3">Sistem ini merupakan digitalisasi dan penyederhanaan dari SOP peminjaman ruangan laboratorium Fakultas Hukum UNRI tanpa perlu surat permohonan fisik atau proses manual berhari-hari.</p>
+                <ol className="list-decimal list-inside space-y-1.5 mb-4">
+                  <li>Mahasiswa mengisi form pengajuan online tanpa surat permohonan atau tanda tangan fisik</li>
+                  <li>Sistem otomatis mengecek bentrok jadwal ruangan</li>
+                  <li>Kepala Labor meninjau dan menyetujui/menolak pengajuan</li>
+                  <li>Jika disetujui, otomatis tercatat di kalender resmi Tata Usaha</li>
+                  <li>Mahasiswa dapat mengecek status kapan saja menggunakan kode booking</li>
+                </ol>
+                <ul className="space-y-2.5">
+                  <li>• Sistem akan menolak submit jika jadwal bentrok dengan pengajuan lain yang <b>sudah disetujui</b> maupun yang <b>masih menunggu</b> persetujuan.</li>
+                  <li>• NIM yang sudah pernah dipakai akan otomatis melengkapi Nama & Kelas.</li>
+                  <li>• Setelah submit, Anda menerima Kode Booking untuk memantau status.</li>
+                  <li>• Pembatalan bisa dilakukan sendiri di halaman Cek Status.</li>
+                  <li>• Data mahasiswa bersifat self-input dan bukan verifikasi identitas resmi.</li>
+                </ul>
+              </div>
             </details>
 
             {conflictInfo && (
